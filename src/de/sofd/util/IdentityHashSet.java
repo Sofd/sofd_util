@@ -19,6 +19,13 @@ public class IdentityHashSet<E> implements Set<E> {
     private Map<E, Object> backend = new IdentityHashMap<E, Object>();
     private final static Object VALUE = new Object();
 
+    public IdentityHashSet() {
+    }
+    
+    public IdentityHashSet(Collection<? extends E> c) {
+        addAll(c);
+    }
+    
     @Override
     public boolean add(E e) {
         return null == backend.put(e, VALUE);
