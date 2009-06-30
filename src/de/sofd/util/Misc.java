@@ -3,6 +3,7 @@ package de.sofd.util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -17,6 +18,8 @@ public class Misc {
             oos.writeObject(t);
             oos.flush();
             return (T)(new ObjectInputStream(new ByteArrayInputStream(serializedT.toByteArray())).readObject());
+        } catch (NotSerializableException e) {
+            throw new RuntimeException("serialization error",e);
         } catch (IOException e) {
             throw new IllegalStateException("should never happen",e);
         } catch (ClassNotFoundException e) {
