@@ -89,6 +89,7 @@ public class Misc {
             } catch (IllegalArgumentException e) {
                 // arguments didn't match. Try other methods (there may be
                 // overloaded ones)
+                continue;
             } catch (InvocationTargetException e) {
                 // ease-of-use (no checked exception declarations) are more
                 // important than
