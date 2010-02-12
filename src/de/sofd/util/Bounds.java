@@ -16,6 +16,14 @@ public class Bounds
         this.maxX = maxX;
         this.maxY = maxY;
     }
+    
+    public int getDeltaX() {
+        return ( maxX - minX );
+    }
+    
+    public int getDeltaY() {
+        return ( maxY - minY );
+    }
 
     public int getMaxX()
     {
