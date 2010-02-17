@@ -58,6 +58,12 @@ public class DoubleDimension3D
     {
         return "[" + width + ", " + height + ", " + depth + "]";
     }
+
+    public double[] toDoubleArray() {
+        double[] d = {width, height, depth};
+        
+        return d;
+    }
     
     
     
