@@ -13,7 +13,7 @@ import java.util.Map;
  * @param <K>
  * @param <V>
  */
-public class LinkedHashMap1toNNoDuplicates1<K, V> extends HashMap1toN<K, V> {
+public class LinkedHashMap1toNNoDuplicates<K, V> extends HashMap1toN<K, V> {
 
     @Override
     protected Map<K, Collection<V>> createBackingMap() {
