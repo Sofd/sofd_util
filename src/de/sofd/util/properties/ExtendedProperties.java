@@ -12,8 +12,13 @@ public class ExtendedProperties extends Properties
     {
         super();
         
-        URL url = ClassLoader.getSystemResource(fileName);
-        this.load(url.openStream());
+        URL url = this.getClass().getClassLoader().getResource(fileName);
+                
+                if (url == null)
+                    throw new IOException("not found: " + fileName);
+                
+                this.load(url.openStream());
+        
     }
     
     public boolean getB(String key)
