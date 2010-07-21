@@ -1,5 +1,10 @@
 package de.sofd.util;
 
+import java.awt.image.WritableRaster;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
+
+//TODO: Oliver: letzte Version einchecken?
 public class Histogram
 {
     protected int[] frequencies;
@@ -11,6 +16,21 @@ public class Histogram
         super();
         this.frequencies = frequencies;
         this.range = range;
+    }
+
+    public Histogram( WritableRaster wr, IntRange range )
+    {
+        //TODO: Oliver
+    }
+
+    public Histogram( ShortBuffer sb, IntRange range )
+    {
+        //TODO: Oliver
+    }
+
+    public Histogram( IntBuffer ib, IntRange range )
+    {
+        //TODO: Oliver
     }
 
     public int[] getFrequencies()
