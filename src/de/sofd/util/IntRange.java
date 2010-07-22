@@ -14,7 +14,7 @@ public class IntRange
     
     public int getDelta()
     {
-        return ( max - min );
+        return (max - min);
     }
 
     public int getMax()
