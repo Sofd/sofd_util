@@ -334,13 +334,16 @@ public class LinAlg {
         stimesv(1.0F/l, v, dest);
         return dest;
     }
-    
 
     /**
-     * Like {@link #fillMultiplication(float[], float[], float[])}, but for R^1 (i.e.
-     * 2x2 matrices describing affine transformations in R^1 ("y=mx+n"), useful for
-     * combining (concatening) things like rescale/slope (windowing) transformations
-     * of grey values.
+     * Like {@link #fillMultiplication(float[], float[], float[])}, but for R^1
+     * (i.e. 2x2 matrices describing affine transformations in R^1 ("y=mx+n"),
+     * useful for combining (concatening) things like rescale/slope (windowing)
+     * transformations of grey values. Contrary to fillMultiplication, a float[]
+     * representing a 2x2 matrix will contain only the first row of the matrix
+     * (i.e., two elements). The second row is implicitly assumed to be [0,1]
+     * (similar to how Java2D's AffineTransformation class also doesn't store
+     * the last row of the matrix ans assumes it to be [0,0,0,1]).
      * 
      * @param a
      * @param b
@@ -359,8 +362,8 @@ public class LinAlg {
         if (null == res) {
             res = new float[2];
         }
-        res[0] = a[0] * b[0];
-        res[1] = a[0] * b[1] + a[1];
+        res[0] = a2[0] * b2[0];
+        res[1] = a2[0] * b2[1] + a2[1];
         return res;
     }
 
