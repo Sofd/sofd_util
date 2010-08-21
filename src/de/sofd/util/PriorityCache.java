@@ -23,7 +23,8 @@ import de.sofd.lang.Function1;
  * up to which the cache will grow before it starts evicting low-priority
  * elements. In the default case, the element cost function will just return 1
  * for all elements, so the {@link #getMaxTotalCost()} will effectively be the
- * maximum number of elements in the cache.
+ * maximum number of elements in the cache. Please note that the cost function's
+ * value MUST NOT change for an element as long as it stays in the cache.
  * <p>
  * The time complexity of all basic operations will generally be O(1) (refer to
  * {@link #PriorityCache(double, double, int, int, Function1)} to see what

@@ -136,6 +136,16 @@ public class PriorityCacheTest {
         assertEquals(1, pc.size());
         assertEquals(80, pc.getCurrentTotalCost());
         assertEquals("3", pc.get("c80-p100").getId());
+
+        pc.put("c30-p40", new EltValue("8", 30), 40);
+        pc.put("c20-p50", new EltValue("9", 20), 50);
+        pc.put("c40-p40", new EltValue("10", 40), 40);
+        assertEquals(170, pc.getCurrentTotalCost());
+        pc.setPriority("c80-p100", 20); // lower c80-p100's priority from 100 to 20
+        pc.put("c60-p50", new EltValue("11", 60), 50);  // should evict it
+        assertEquals(150, pc.getCurrentTotalCost()); // 170+60-80
+        assertEquals(4, pc.size());
+        assertNull(pc.get("c80-p100"));
     }
 
 }
