@@ -63,7 +63,7 @@ public class PriorityCacheTest {
     @Test
     public void testSimpleMapping() {
         System.out.println("SimpleMapping");
-        PriorityCache<String, EltValue> pc = new PriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
+        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
         assertTrue(pc.isEmpty());
         pc.put("foo", new EltValue("foo", 1), 0);
         pc.put("bar", new EltValue("bar", 1), 0);
@@ -87,7 +87,7 @@ public class PriorityCacheTest {
     @Test
     public void testTotalCost() {
         System.out.println("TotalCost");
-        PriorityCache<String, EltValue> pc = new PriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
+        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
         assertTrue(pc.isEmpty());
         assertEquals(0, pc.getCurrentTotalCost());
         pc.put("foo", new EltValue("foo", 10), 0);
@@ -104,7 +104,7 @@ public class PriorityCacheTest {
     @Test
     public void testPriorities() {
         System.out.println("Priorities");
-        PriorityCache<String, EltValue> pc = new PriorityCache<String, EltValue>(0, 100, 10, 500, costFunction);
+        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 500, costFunction);
         assertTrue(pc.isEmpty());
         assertEquals(0, pc.getCurrentTotalCost());
         pc.put("c100-p50", new EltValue("1", 100), 50);
