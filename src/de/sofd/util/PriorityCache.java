@@ -12,7 +12,7 @@ import de.sofd.lang.Function1;
  * <p>
  * To "cost" of an element in the cache is determined by the
  * "element cost function" {@link #getElementCostFunction()}, which maps each
- * element to its cost, a non-negative integer. This is commonly used for things
+ * element to its cost, a non-negative number. This is commonly used for things
  * like the effective "memory consumption" of the element -- so then cache can
  * contain many small or fewer large elements or anything in between. In that
  * case, {@link #getMaxTotalCost()} will be the maximum total memory consumption
@@ -33,11 +33,11 @@ public interface PriorityCache<K, V> {
 
     V get(K k);
 
-    int getCurrentTotalCost();
+    double getCurrentTotalCost();
 
-    Function1<V, Integer> getElementCostFunction();
+    Function1<V, Double> getElementCostFunction();
 
-    int getMaxTotalCost();
+    double getMaxTotalCost();
 
     boolean isEmpty();
 
@@ -45,7 +45,7 @@ public interface PriorityCache<K, V> {
 
     V remove(K k);
 
-    void setMaxTotalCost(int maxTotalCost);
+    void setMaxTotalCost(double maxTotalCost);
 
     /**
      * Doesn't do anything if k isn't currently stored. The caller should be

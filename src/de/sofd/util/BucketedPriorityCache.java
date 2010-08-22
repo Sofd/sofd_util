@@ -39,10 +39,10 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
     private LinkedHashMap<K, Entry>[] buckets;
     private final double bucketWidth;
 
-    private final Function1<V, Integer> elementCostFunction;
+    private final Function1<V, Double> elementCostFunction;
 
-    int totalCost = 0;
-    int maxTotalCost;
+    double totalCost = 0;
+    double maxTotalCost;
 
     /**
      * Creates a default PriorityCache with a 0..10 sensitive priority range and
@@ -51,10 +51,10 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
      * to a maximum of 1000 elements.
      */
     public BucketedPriorityCache() {
-        this(0, 10, 10, 1000, new Function1<V, Integer>() {
+        this(0, 10, 10, 1000, new Function1<V, Double>() {
             @Override
-            public Integer run(V p0) {
-                return 1;
+            public Double run(V p0) {
+                return 1.0;
             }
         });
     }
@@ -80,7 +80,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
      */
     @SuppressWarnings("unchecked")
     public BucketedPriorityCache(double lowPrio, double highPrio, int nBuckets,
-            int maxTotalCost, Function1<V, Integer> elementCostFunction) {
+            int maxTotalCost, Function1<V, Double> elementCostFunction) {
         if (lowPrio >= highPrio || nBuckets <= 0) {
             throw new IllegalArgumentException();
         }
@@ -171,17 +171,17 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
     }
 
     @Override
-    public synchronized int getCurrentTotalCost() {
+    public synchronized double getCurrentTotalCost() {
         return totalCost;
     }
 
     @Override
-    public synchronized int getMaxTotalCost() {
+    public synchronized double getMaxTotalCost() {
         return maxTotalCost;
     }
 
     @Override
-    public synchronized void setMaxTotalCost(int maxTotalCost) {
+    public synchronized void setMaxTotalCost(double maxTotalCost) {
         if (maxTotalCost < 0) {
             throw new IllegalArgumentException();
         }
@@ -190,7 +190,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
     }
 
     @Override
-    public Function1<V, Integer> getElementCostFunction() {
+    public Function1<V, Double> getElementCostFunction() {
         return elementCostFunction;
     }
 

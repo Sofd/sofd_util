@@ -16,9 +16,9 @@ public class PriorityCacheTest {
 
     protected static class EltValue {
         private String id;
-        private int cost;
+        private double cost;
 
-        public EltValue(String id, int cost) {
+        public EltValue(String id, double cost) {
             this.id = id;
             this.cost = cost;
         }
@@ -27,15 +27,15 @@ public class PriorityCacheTest {
             return id;
         }
 
-        public int getCost() {
+        public double getCost() {
             return cost;
         }
     }
 
-    private static Function1<EltValue, Integer> costFunction = new Function1<EltValue, Integer>() {
+    private static Function1<EltValue, Double> costFunction = new Function1<EltValue, Double>() {
 
         @Override
-        public Integer run(EltValue p0) {
+        public Double run(EltValue p0) {
             return p0.getCost();
         }
 
@@ -89,16 +89,16 @@ public class PriorityCacheTest {
         System.out.println("TotalCost");
         PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
         assertTrue(pc.isEmpty());
-        assertEquals(0, pc.getCurrentTotalCost());
+        assertEquals(0, pc.getCurrentTotalCost(), 0.001);
         pc.put("foo", new EltValue("foo", 10), 0);
-        assertEquals(10, pc.getCurrentTotalCost());
+        assertEquals(10, pc.getCurrentTotalCost(), 0.001);
         pc.put("bar", new EltValue("bar", 20), 0);
-        assertEquals(30, pc.getCurrentTotalCost());
+        assertEquals(30, pc.getCurrentTotalCost(), 0.001);
         pc.put("baz", new EltValue("baz", 100), 0);
-        assertEquals(130, pc.getCurrentTotalCost());
+        assertEquals(130, pc.getCurrentTotalCost(), 0.001);
 
         assertEquals("bar", pc.remove("bar").getId());
-        assertEquals(110, pc.getCurrentTotalCost());
+        assertEquals(110, pc.getCurrentTotalCost(), 0.001);
     }
 
     @Test
@@ -106,27 +106,27 @@ public class PriorityCacheTest {
         System.out.println("Priorities");
         PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 500, costFunction);
         assertTrue(pc.isEmpty());
-        assertEquals(0, pc.getCurrentTotalCost());
+        assertEquals(0, pc.getCurrentTotalCost(), 0.001);
         pc.put("c100-p50", new EltValue("1", 100), 50);
         pc.put("c130-p40", new EltValue("2", 130), 40);
-        assertEquals(230, pc.getCurrentTotalCost());
+        assertEquals(230, pc.getCurrentTotalCost(), 0.001);
         pc.put("c80-p100", new EltValue("3", 80), 100);
-        assertEquals(310, pc.getCurrentTotalCost());
+        assertEquals(310, pc.getCurrentTotalCost(), 0.001);
         pc.put("c110-p60", new EltValue("4", 110), 60);
-        assertEquals(420, pc.getCurrentTotalCost());
+        assertEquals(420, pc.getCurrentTotalCost(), 0.001);
         assertEquals(4, pc.size());
         pc.put("c150-p60", new EltValue("5", 150), 60); // cost 500 exceeded => lowest-prio element (c130-p40) evicted
         assertEquals(4, pc.size());
-        assertEquals(440, pc.getCurrentTotalCost()); // 420 + 150 - 130
+        assertEquals(440, pc.getCurrentTotalCost(), 0.001); // 420 + 150 - 130
         assertNull(pc.get("c130-p40"));
 
         pc.put("c50-p40", new EltValue("6", 50), 40);
         assertEquals(5, pc.size());
-        assertEquals(490, pc.getCurrentTotalCost());
+        assertEquals(490, pc.getCurrentTotalCost(), 0.001);
 
         pc.put("c200-p70", new EltValue("7", 200), 70); // should evict c50-p40, c100-p50, c110-p60 (NOT c150-p60 b/c of access-ordered eviction for equal-prio elts.)
         assertEquals(3, pc.size());
-        assertEquals(430, pc.getCurrentTotalCost()); // 490 + 200 - 50 - 100 - 110
+        assertEquals(430, pc.getCurrentTotalCost(), 0.001); // 490 + 200 - 50 - 100 - 110
         // check that the expected ones are still in there
         assertEquals("3", pc.get("c80-p100").getId());
         assertEquals("5", pc.get("c150-p60").getId());
@@ -134,16 +134,16 @@ public class PriorityCacheTest {
 
         pc.setMaxTotalCost(200);   // should evict c150-p60, c200-p70
         assertEquals(1, pc.size());
-        assertEquals(80, pc.getCurrentTotalCost());
+        assertEquals(80, pc.getCurrentTotalCost(), 0.001);
         assertEquals("3", pc.get("c80-p100").getId());
 
         pc.put("c30-p40", new EltValue("8", 30), 40);
         pc.put("c20-p50", new EltValue("9", 20), 50);
         pc.put("c40-p40", new EltValue("10", 40), 40);
-        assertEquals(170, pc.getCurrentTotalCost());
+        assertEquals(170, pc.getCurrentTotalCost(), 0.001);
         pc.setPriority("c80-p100", 20); // lower c80-p100's priority from 100 to 20
         pc.put("c60-p50", new EltValue("11", 60), 50);  // should evict it
-        assertEquals(150, pc.getCurrentTotalCost()); // 170+60-80
+        assertEquals(150, pc.getCurrentTotalCost(), 0.001); // 170+60-80
         assertEquals(4, pc.size());
         assertNull(pc.get("c80-p100"));
     }
