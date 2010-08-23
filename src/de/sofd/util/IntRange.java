@@ -76,10 +76,10 @@ public class IntRange
      */
     public static IntRange[] subtract(IntRange r1, IntRange r2) {
         if (r1 == null) {
-            return new IntRange[]{null, null};
+            return new IntRange[]{};
         }
         if (r2 == null) {
-            return new IntRange[]{r1, null};
+            return new IntRange[]{r1};
         }
         int min0 = r1.getMin();
         int max0 = Math.min(r2.getMin(), r1.getMax() + 1) - 1;

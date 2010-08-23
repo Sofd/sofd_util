@@ -53,6 +53,8 @@ public class IntRangeTest {
         assertNull(r1.intersect(new IntRange(0, 10)));
         assertNull(r1.intersect(new IntRange(0, 19)));
         assertNull(r1.intersect(new IntRange(31, 40)));
+        assertNull(r1.intersect(null));
+        assertNull(IntRange.intersect(null, r1));
     }
 
     @Test
@@ -77,5 +79,7 @@ public class IntRangeTest {
         assertArrayEquals(new IntRange[]{new IntRange(20,20)}, r1.subtract(new IntRange(21,30)));
         assertArrayEquals(new IntRange[]{new IntRange(20,20)}, r1.subtract(new IntRange(21,40)));
         assertArrayEquals(new IntRange[]{new IntRange(20,20), new IntRange(30,30)}, r1.subtract(new IntRange(21,29)));
+        assertArrayEquals(new IntRange[]{r1}, r1.subtract(null));
+        assertArrayEquals(new IntRange[]{}, IntRange.subtract(null, r1));
     }
 }
