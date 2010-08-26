@@ -176,6 +176,12 @@ public class PriorityCacheTest {
         //assertion for access-ordered iteration -- not implemented atm.
         //assertEquals(40, pc.get("c40-p40").getCost(), 0.001);
         //assertIterationValues(pc, "10", "8", "9", "11");
+
+        pc.setMaxTotalCost(-1);  //disable cost upper limit
+        pc.put("c200-p85", new EltValue("12", 200), 85);
+        pc.put("c400-p45", new EltValue("13", 400), 45);
+        assertEquals(750, pc.getCurrentTotalCost(), 0.001);
+        assertIterationValues(pc, "8", "10", "13", "9", "11", "12");
     }
 
 }

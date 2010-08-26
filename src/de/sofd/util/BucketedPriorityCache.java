@@ -201,9 +201,6 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
 
     @Override
     public synchronized void setMaxTotalCost(double maxTotalCost) {
-        if (maxTotalCost < 0) {
-            throw new IllegalArgumentException();
-        }
         this.maxTotalCost = maxTotalCost;
         evictExcessElements();
     }
@@ -268,6 +265,9 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
     };
 
     protected void evictExcessElements() {
+        if (maxTotalCost < 0) {
+            return;
+        }
         while ((totalCost > maxTotalCost) && (entries.size() > 1)) {
             // ^^^ ensure size >= 1 to always keep at least one element in, even
             // if it alone exceeds maxTotalCost

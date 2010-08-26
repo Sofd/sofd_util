@@ -9,7 +9,9 @@ import java.util.Iterator;
  * govern iteration order and eviction policy. When the "total cost" of the
  * elements (= number of elements in the simplest case) exceeds a configurable
  * limit ( {@link #getMaxTotalCost()}), other elements will be thrown out
- * (evicted), starting with the elements with the lowest priorities.
+ * (evicted), starting with the elements with the lowest priorities. Setting
+ * the limit to a value less than 0 disables it (i.e. the total cost can grow
+ * unboundedly.
  * <p>
  * To "cost" of an element in the cache is determined by the
  * "element cost function" {@link #getElementCostFunction()}, which maps each
