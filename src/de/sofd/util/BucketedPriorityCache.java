@@ -15,7 +15,8 @@ import java.util.NoSuchElementException;
  * {@link #BucketedPriorityCache(double, double, int, int, Function1)} to see
  * what compromises are made to achieve this).
  * <p>
- * Please note that this class is synchronized.
+ * Please note that this class is synchronized (TODO: undo that and have a
+ * separate synchronized wrapper)
  * 
  * @author olaf
  * 
@@ -31,6 +32,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
 
         public EntryImpl(K k, V v, double priority) {
             super();
+            this.k = k;
             this.v = v;
             this.priority = priority;
         }
@@ -94,7 +96,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
      */
     @SuppressWarnings("unchecked")
     public BucketedPriorityCache(double lowPrio, double highPrio, int nBuckets,
-            int maxTotalCost, Function1<V, Double> elementCostFunction) {
+            double maxTotalCost, Function1<V, Double> elementCostFunction) {
         if (lowPrio >= highPrio || nBuckets <= 0) {
             throw new IllegalArgumentException();
         }
@@ -218,8 +220,10 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         return new EntryIterator();
     }
 
+    //TODO: synchronization...
     protected class EntryIterator implements Iterator<Entry<K, V>> {
         boolean hasNext;
+        Entry<K, V> lastNext;
         int currBucketNo;
         Iterator<Map.Entry<K, EntryImpl<K,V>>> currBucketIterator;
 
@@ -257,14 +261,18 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            Entry<K, V> result = currBucketIterator.next().getValue();
+            lastNext = currBucketIterator.next().getValue();
             advanceToNext();
-            return result;
+            return lastNext;
         }
 
         @Override
         public void remove() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            if (lastNext == null) {
+                throw new IllegalStateException();
+            }
+            BucketedPriorityCache.this.remove(lastNext.getKey());
+            lastNext = null;
         }
     };
 

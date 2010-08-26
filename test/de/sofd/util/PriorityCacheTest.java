@@ -90,11 +90,31 @@ public class PriorityCacheTest {
         System.out.println("SimpleIteration");
         PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
         assertTrue(pc.isEmpty());
-        pc.put("foo", new EltValue("foo", 1), 0);
-        pc.put("bar", new EltValue("bar", 1), 0);
-        pc.put("baz", new EltValue("baz", 1), 0);
+        pc.put("1", new EltValue("foo", 10), 30);
+        pc.put("2", new EltValue("bar", 50), 90);
+        pc.put("3", new EltValue("baz", 20), 70);
         assertFalse(pc.isEmpty());
-        assertIterationValues(pc, "foo", "bar", "baz");
+        assertIterationValues(pc, "foo", "baz", "bar");
+
+        Iterator<PriorityCache.Entry<String, EltValue>>  it = pc.entryIterator();
+        assertTrue(it.hasNext());
+        PriorityCache.Entry<String, EltValue> ce = it.next();
+        assertEquals("1", ce.getKey());
+        assertEquals("foo", ce.getValue().getId());
+        assertEquals(10, ce.getValue().getCost(), 0.001);
+        assertTrue(it.hasNext());
+        ce = it.next();
+        assertEquals("3", ce.getKey());
+        assertEquals("baz", ce.getValue().getId());
+        assertEquals(20, ce.getValue().getCost(), 0.001);
+        it.remove();
+        assertTrue(it.hasNext());
+        ce = it.next();
+        assertEquals("2", ce.getKey());
+        assertEquals("bar", ce.getValue().getId());
+        assertEquals(50, ce.getValue().getCost(), 0.001);
+        assertFalse(it.hasNext());
+        assertIterationValues(pc, "foo", "bar");
     }
 
     protected void assertIterationValues(PriorityCache<String, EltValue> pc, String... values) {
