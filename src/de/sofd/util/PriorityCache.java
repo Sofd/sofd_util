@@ -1,6 +1,7 @@
 package de.sofd.util;
 
 import de.sofd.lang.Function1;
+import java.util.Iterator;
 
 /**
  * Base interface for a priority-based cache. Basically a Map that has a
@@ -29,6 +30,12 @@ import de.sofd.lang.Function1;
  */
 public interface PriorityCache<K, V> {
 
+    public interface Entry<K, V> {
+        K getKey();
+        V getValue();
+        double getPriority();
+    }
+
     boolean contains(K k);
 
     V get(K k);
@@ -54,4 +61,7 @@ public interface PriorityCache<K, V> {
     void setPriority(K k, double priority);
 
     int size();
+
+    Iterator<Entry<K, V>> entryIterator();
+
 }

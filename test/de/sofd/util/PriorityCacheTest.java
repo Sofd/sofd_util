@@ -1,6 +1,7 @@
 package de.sofd.util;
 
 import de.sofd.lang.Function1;
+import java.util.Iterator;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -85,6 +86,28 @@ public class PriorityCacheTest {
     }
 
     @Test
+    public void testSimpleIteration() {
+        System.out.println("SimpleIteration");
+        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
+        assertTrue(pc.isEmpty());
+        pc.put("foo", new EltValue("foo", 1), 0);
+        pc.put("bar", new EltValue("bar", 1), 0);
+        pc.put("baz", new EltValue("baz", 1), 0);
+        assertFalse(pc.isEmpty());
+        assertIterationValues(pc, "foo", "bar", "baz");
+    }
+
+    protected void assertIterationValues(PriorityCache<String, EltValue> pc, String... values) {
+        Iterator<PriorityCache.Entry<String, EltValue>> it = pc.entryIterator();
+        for (String v : values) {
+            assertTrue(it.hasNext());
+            PriorityCache.Entry<String, EltValue> e = it.next();
+            assertEquals(v, e.getValue().getId());
+        }
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     public void testTotalCost() {
         System.out.println("TotalCost");
         PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
@@ -115,6 +138,7 @@ public class PriorityCacheTest {
         pc.put("c110-p60", new EltValue("4", 110), 60);
         assertEquals(420, pc.getCurrentTotalCost(), 0.001);
         assertEquals(4, pc.size());
+        assertIterationValues(pc, "2", "1", "4", "3");
         pc.put("c150-p60", new EltValue("5", 150), 60); // cost 500 exceeded => lowest-prio element (c130-p40) evicted
         assertEquals(4, pc.size());
         assertEquals(440, pc.getCurrentTotalCost(), 0.001); // 420 + 150 - 130
@@ -123,14 +147,16 @@ public class PriorityCacheTest {
         pc.put("c50-p40", new EltValue("6", 50), 40);
         assertEquals(5, pc.size());
         assertEquals(490, pc.getCurrentTotalCost(), 0.001);
+        assertIterationValues(pc, "6", "1", "4", "5", "3");
 
-        pc.put("c200-p70", new EltValue("7", 200), 70); // should evict c50-p40, c100-p50, c110-p60 (NOT c150-p60 b/c of access-ordered eviction for equal-prio elts.)
+        pc.put("c200-p70", new EltValue("7", 200), 70); // should evict c50-p40, c100-p50, c110-p60 (NOT c150-p60 b/c of insertion-ordered eviction for equal-prio elts.)
         assertEquals(3, pc.size());
         assertEquals(430, pc.getCurrentTotalCost(), 0.001); // 490 + 200 - 50 - 100 - 110
         // check that the expected ones are still in there
         assertEquals("3", pc.get("c80-p100").getId());
         assertEquals("5", pc.get("c150-p60").getId());
         assertEquals("7", pc.get("c200-p70").getId());
+        assertIterationValues(pc, "5", "7", "3");
 
         pc.setMaxTotalCost(200);   // should evict c150-p60, c200-p70
         assertEquals(1, pc.size());
@@ -146,6 +172,10 @@ public class PriorityCacheTest {
         assertEquals(150, pc.getCurrentTotalCost(), 0.001); // 170+60-80
         assertEquals(4, pc.size());
         assertNull(pc.get("c80-p100"));
+        assertIterationValues(pc, "8", "10", "9", "11");
+        //assertion for access-ordered iteration -- not implemented atm.
+        //assertEquals(40, pc.get("c40-p40").getCost(), 0.001);
+        //assertIterationValues(pc, "10", "8", "9", "11");
     }
 
 }

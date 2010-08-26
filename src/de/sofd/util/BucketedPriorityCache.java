@@ -1,10 +1,13 @@
 package de.sofd.util;
 
+import de.sofd.util.PriorityCache.Entry;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import de.sofd.lang.Function1;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * PriorityCache implementation that provides O(1) time complexity for all
@@ -21,22 +24,38 @@ import de.sofd.lang.Function1;
  */
 public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
 
-    protected class Entry {
+    protected static class EntryImpl<K, V> implements Entry<K,V> {
+        K k;
         V v;
         double priority;
 
-        public Entry(V v, double priority) {
+        public EntryImpl(K k, V v, double priority) {
             super();
             this.v = v;
             this.priority = priority;
         }
+
+        @Override
+        public K getKey() {
+            return k;
+        }
+
+        @Override
+        public V getValue() {
+            return v;
+        }
+
+        @Override
+        public double getPriority() {
+            return priority;
+        }
     }
 
-    private final Map<K, Entry> entries = new HashMap<K, Entry>();
+    private final Map<K, EntryImpl<K,V>> entries = new HashMap<K, EntryImpl<K,V>>();
 
     private final double lowPrio, highPrio;
     private final int nBuckets, maxBucketNr;
-    private LinkedHashMap<K, Entry>[] buckets;
+    private LinkedHashMap<K, EntryImpl<K,V>>[] buckets;
     private final double bucketWidth;
 
     private final Function1<V, Double> elementCostFunction;
@@ -90,7 +109,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         this.maxBucketNr = nBuckets - 1;
         this.buckets = new LinkedHashMap[nBuckets];
         for (int i = 0; i < nBuckets; i++) {
-            buckets[i] = new LinkedHashMap<K, Entry>(256, 0.75F, true);
+            buckets[i] = new LinkedHashMap<K, EntryImpl<K,V>>(256, 0.75F, false);  //TODO: could access-order really be guaranteed to the outside (b/c internal accesses)?
         }
         this.bucketWidth = (highPrio - lowPrio) / nBuckets;
         this.maxTotalCost = maxTotalCost;
@@ -105,8 +124,8 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
     @Override
     public synchronized V put(K k, V v, double priority) {
         V result = null;
-        Entry newE = new Entry(v, priority);
-        Entry oldE = entries.put(k, newE);
+        EntryImpl<K,V> newE = new EntryImpl<K,V>(k, v, priority);
+        EntryImpl<K,V> oldE = entries.put(k, newE);
         if (null != oldE) {
             buckets[prio2bucketNr(oldE.priority)].remove(k);
             totalCost -= elementCostFunction.run(oldE.v);
@@ -120,7 +139,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
 
     @Override
     public synchronized V get(K k) {
-        Entry e = entries.get(k);
+        EntryImpl<K,V> e = entries.get(k);
         if (e == null) {
             return null;
         } else {
@@ -130,7 +149,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
 
     @Override
     public synchronized V remove(K k) {
-        Entry oldE = entries.remove(k);
+        EntryImpl<K,V> oldE = entries.remove(k);
         if (oldE != null) {
             buckets[prio2bucketNr(oldE.priority)].remove(k);
             totalCost -= elementCostFunction.run(oldE.v);
@@ -161,10 +180,10 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
      */
     @Override
     public synchronized void setPriority(K k, double priority) {
-        Entry oldE = entries.remove(k);
+        EntryImpl<K,V> oldE = entries.remove(k);
         if (oldE != null) {
             buckets[prio2bucketNr(oldE.priority)].remove(k);
-            Entry newE = new Entry(oldE.v, priority);
+            EntryImpl<K,V> newE = new EntryImpl<K,V>(k, oldE.v, priority);
             entries.put(k, newE);
             buckets[prio2bucketNr(newE.priority)].put(k, newE);
         }
@@ -194,18 +213,72 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         return elementCostFunction;
     }
 
+    public Iterator<Entry<K,V>> entryIterator()   {
+        return new EntryIterator();
+    }
+
+    protected class EntryIterator implements Iterator<Entry<K, V>> {
+        boolean hasNext;
+        int currBucketNo;
+        Iterator<Map.Entry<K, EntryImpl<K,V>>> currBucketIterator;
+
+        public EntryIterator() {
+            currBucketNo = 0;
+            currBucketIterator = buckets[currBucketNo].entrySet().iterator();
+            advanceToNext();
+        }
+
+        private void advanceToNext() {
+            if (currBucketIterator.hasNext()) {
+                hasNext = true;
+            } else {
+                for (int iBucket = currBucketNo + 1; iBucket < nBuckets; iBucket++) {
+                    LinkedHashMap<K, EntryImpl<K,V>> bucket = buckets[iBucket];
+                    if (bucket.isEmpty()) {
+                        continue;
+                    }
+                    currBucketIterator = bucket.entrySet().iterator();
+                    currBucketNo = iBucket;
+                    hasNext = true;
+                    return;
+                }
+                hasNext = false;
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return hasNext;
+        }
+
+        @Override
+        public Entry<K, V> next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            Entry<K, V> result = currBucketIterator.next().getValue();
+            advanceToNext();
+            return result;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    };
+
     protected void evictExcessElements() {
         while ((totalCost > maxTotalCost) && (entries.size() > 1)) {
             // ^^^ ensure size >= 1 to always keep at least one element in, even
             // if it alone exceeds maxTotalCost
             for (int iBucket = 0; iBucket < nBuckets; iBucket++) {
-                LinkedHashMap<K, Entry> bucket = buckets[iBucket];
+                LinkedHashMap<K, EntryImpl<K,V>> bucket = buckets[iBucket];
                 if (bucket.isEmpty()) {
                     continue;
                 }
-                Map.Entry<K, Entry> oldestMapEntry = bucket.entrySet()
+                Map.Entry<K, EntryImpl<K,V>> oldestMapEntry = bucket.entrySet()
                         .iterator().next();
-                Entry oldestEntry = oldestMapEntry.getValue();
+                EntryImpl<K,V> oldestEntry = oldestMapEntry.getValue();
                 totalCost -= elementCostFunction.run(oldestEntry.v);
                 bucket.remove(oldestMapEntry.getKey());
                 entries.remove(oldestMapEntry.getKey());
