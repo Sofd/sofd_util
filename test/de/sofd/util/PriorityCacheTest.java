@@ -184,4 +184,21 @@ public class PriorityCacheTest {
         assertIterationValues(pc, "8", "10", "13", "9", "11", "12");
     }
 
+    @Test
+    public void testDefaultUnlimitedCost() {
+        System.out.println("DefaultUnlimitedCost");
+        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, -1, null);
+        assertTrue(pc.isEmpty());
+        assertEquals(0, pc.getCurrentTotalCost(), 0.001);
+        pc.put("foo", new EltValue("foo", 3000), 0);
+        assertEquals(1, pc.getCurrentTotalCost(), 0.001);
+        pc.put("bar", new EltValue("bar", 2000), 0);
+        assertEquals(2, pc.getCurrentTotalCost(), 0.001);
+        pc.put("baz", new EltValue("baz", 5000), 0);
+        assertEquals(3, pc.getCurrentTotalCost(), 0.001);
+
+        assertEquals("bar", pc.remove("bar").getId());
+        assertEquals(2, pc.getCurrentTotalCost(), 0.001);
+    }
+
 }

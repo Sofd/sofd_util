@@ -70,12 +70,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
      * to a maximum of 1000 elements.
      */
     public BucketedPriorityCache() {
-        this(0, 10, 10, 1000, new Function1<V, Double>() {
-            @Override
-            public Double run(V p0) {
-                return 1.0;
-            }
-        });
+        this(0, 10, 10, 1000, null);
     }
 
     /**
@@ -113,7 +108,16 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         }
         this.bucketWidth = (highPrio - lowPrio) / nBuckets;
         this.maxTotalCost = maxTotalCost;
-        this.elementCostFunction = elementCostFunction;
+        if (elementCostFunction != null) {
+            this.elementCostFunction = elementCostFunction;
+        } else {
+            this.elementCostFunction = new Function1<V, Double>() {
+                @Override
+                public Double run(V v) {
+                    return 1.0;
+                }
+            };
+        }
     }
 
     protected int prio2bucketNr(double prio) {
