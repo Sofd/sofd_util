@@ -1,6 +1,8 @@
 package de.sofd.util;
 
 import de.sofd.lang.Function1;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -115,6 +117,17 @@ public class PriorityCacheTest {
         assertEquals(50, ce.getValue().getCost(), 0.001);
         assertFalse(it.hasNext());
         assertIterationValues(pc, "foo", "bar");
+        assertEquals(2, pc.size());
+
+        ArrayList<EltValue> drainage = new ArrayList<EltValue>();
+        for (it = pc.entryIterator(); it.hasNext();) {
+            drainage.add(it.next().getValue());
+            it.remove();
+        }
+        assertTrue(pc.isEmpty());
+        assertEquals(2, drainage.size());
+        assertEquals("foo", drainage.get(0).getId());
+        assertEquals("bar", drainage.get(1).getId());
     }
 
     protected void assertIterationValues(PriorityCache<String, EltValue> pc, String... values) {

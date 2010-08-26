@@ -1,78 +1,178 @@
 package de.sofd.util.concurrent;
 
+import de.sofd.lang.Function1;
+import de.sofd.util.BucketedPriorityCache;
 import de.sofd.util.PriorityCache;
 import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * {@link BlockingQueue} implementation that
+ * assigns numerical priorities to its elements and orders them in ascending
+ * priority order. This is similar to how {@link PriorityBlockingQueue}
+ * orders its elements in ascending {@linkplain Comparable natural ordering},
+ * except that this implementation provides O(1) (rather than O(log n)) time
+ * complexity for all basic operations by using a {@link BucketedPriorityCache}
+ * internally.
+ * <p>
+ * The priority of each element is determined by a <em>priority function</em>,
+ * which must be supplied to the constructor of this class.
+ * <p>
+ * Additionally, you may supply a <em>cost function</em> that determines a
+ * "cost" of each element, and a maximum cost up to which the queue can grow.
+ * Please note that when the maximum priority is exceeded, elements with low
+ * priorities will be evicted as necessary (see {@link PriorityCache} for
+ * details). So, what will NOT happen is that methods like <em>put</em> block
+ * until other threads have removed enough elements. (something like that may
+ * be implemented in the future). For now, only take() will block when the
+ * queue is empty.
  *
  * @author olaf
  */
 public class NumericPriorityBlockingQueue<E> extends AbstractQueue<E> implements BlockingQueue<E> {
 
-    private PriorityCache<E, E> delegate;   //key==value in all elements
+    private final PriorityCache<E, E> backend;   //key==value in all elements
+    private final Function1<E, Double> elementPriorityFunction;
+    private final Object lock = new Object();
+
+    public NumericPriorityBlockingQueue(double lowPrio, double highPrio, int nBuckets, Function1<E, Double> elementPriorityFunction) {
+        this(lowPrio, highPrio, nBuckets, elementPriorityFunction, -1, null);
+    }
+
+    public NumericPriorityBlockingQueue(double lowPrio, double highPrio, int nBuckets, Function1<E, Double> elementPriorityFunction, double maxTotalCost, Function1<E, Double> elementCostFunction) {
+        this.backend = new BucketedPriorityCache<E, E>(lowPrio, highPrio, nBuckets, maxTotalCost, elementCostFunction);
+        this.elementPriorityFunction = elementPriorityFunction;
+    }
+
 
     @Override
     public Iterator<E> iterator() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        final Iterator<PriorityCache.Entry<E, E>> ei = backend.entryIterator();
+        return new Iterator<E>() {
+
+            @Override
+            public boolean hasNext() {
+                synchronized (lock) {
+                    return ei.hasNext();
+                }
+            }
+
+            @Override
+            public E next() {
+                synchronized (lock) {
+                    return ei.next().getValue();
+                }
+            }
+
+            @Override
+            public void remove() {
+                synchronized (lock) {
+                    ei.remove();
+                }
+            }
+        };
     }
 
     @Override
     public int size() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return backend.size();
     }
 
     @Override
     public boolean offer(E e) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        synchronized (lock) {
+            backend.put(e, e, elementPriorityFunction.run(e));
+            if (backend.size() == 1) {
+                lock.notify();
+            }
+            return true;
+        }
     }
 
     @Override
     public E poll() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        synchronized (lock) {
+            Iterator<PriorityCache.Entry<E, E>> ei = backend.entryIterator();
+            if (!ei.hasNext()) {
+                return null;
+            }
+            E e = ei.next().getKey();
+            ei.remove();
+            return e;
+        }
     }
 
     @Override
     public E peek() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        synchronized (lock) {
+            Iterator<PriorityCache.Entry<E, E>> ei = backend.entryIterator();
+            if (!ei.hasNext()) {
+                return null;
+            }
+            return ei.next().getKey();
+        }
     }
 
     @Override
     public void put(E e) throws InterruptedException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        offer(e);
     }
 
     @Override
     public boolean offer(E e, long timeout, TimeUnit unit) throws InterruptedException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return offer(e);
     }
 
     @Override
     public E take() throws InterruptedException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        synchronized (lock) {
+            while (backend.isEmpty()) {
+                lock.wait();
+            }
+            return poll();
+        }
     }
 
     @Override
     public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        synchronized (lock) {
+            while (backend.isEmpty()) {
+                lock.wait(unit.toMillis(timeout));
+            }
+            return poll();
+        }
     }
 
     @Override
     public int remainingCapacity() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return Integer.MAX_VALUE;
     }
 
     @Override
     public int drainTo(Collection<? super E> c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return drainTo(c, Integer.MAX_VALUE);
     }
 
     @Override
     public int drainTo(Collection<? super E> c, int maxElements) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (c == this) {
+            throw new IllegalArgumentException();
+        }
+        int n = 0;
+        for (Iterator<PriorityCache.Entry<E,E>> it = backend.entryIterator(); it.hasNext() && n < maxElements;) {
+            c.add(it.next().getValue());
+            it.remove();
+            ++n;
+        }
+        return n;
+    }
+
+    public void setMaxTotalCost(double value) {
+        backend.setMaxTotalCost(value);
     }
 
 }
