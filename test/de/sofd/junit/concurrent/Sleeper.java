@@ -11,7 +11,7 @@ public class Sleeper implements Runnable {
     private final long sleepTime;
 
     public Sleeper(String name, int sleepTime) {
-        this(Clock.getDefaultClock(), MessageLog.getDefaultLog(), name, sleepTime);
+        this(Clock.getDefaultClock(), MessageLog.getDefaultMessageLog(), name, sleepTime);
     }
 
     public Sleeper(Clock clock, MessageLog messageLog, String name, int sleepTime) {
@@ -23,9 +23,9 @@ public class Sleeper implements Runnable {
 
     @Override
     public void run() {
-        messageLog.writeLogMessage(name+" started");
-        clock.clockSleep(sleepTime);
-        messageLog.writeLogMessage(name+" finished");
+        messageLog.writeMessage(name+" started");
+        clock.sleep(sleepTime);
+        messageLog.writeMessage(name+" finished");
     }
 
 }

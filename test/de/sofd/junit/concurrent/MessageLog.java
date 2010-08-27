@@ -22,17 +22,17 @@ public class MessageLog {
         this.clock = clock;
     }
 
-    public void writeLogMessage(String msg) {
-        long time = clock.getCurrentClockTime();
+    public void writeMessage(String msg) {
+        long time = clock.getCurrentTime();
         currMessages.add(new Message(time, msg));
         System.err.println(time + " ticks: " + msg);
     }
 
-    public void assertLogMessagesEqual(Message[] messages) {
+    public void assertMessagesEqual(Message[] messages) {
         assertEquals(messages, currMessages);
     }
 
-    public void clearMessageLog() {
+    public void clear() {
         currMessages.clear();
     }
 
@@ -42,19 +42,19 @@ public class MessageLog {
 
     private static MessageLog defaultLog = new MessageLog();
 
-    public static void writeMessage(String msg) {
-        defaultLog.writeLogMessage(msg);
+    public static void writeLogMessage(String msg) {
+        defaultLog.writeMessage(msg);
     }
 
-    public static void assertMessagesEqual(Message[] messages) {
-        defaultLog.assertLogMessagesEqual(messages);
+    public static void assertLogMessagesEqual(Message[] messages) {
+        defaultLog.assertMessagesEqual(messages);
     }
 
-    public static void clearLog() {
-        defaultLog.clearMessageLog();
+    public static void clearMessageLog() {
+        defaultLog.clear();
     }
 
-    public static MessageLog getDefaultLog() {
+    public static MessageLog getDefaultMessageLog() {
         return defaultLog;
     }
 

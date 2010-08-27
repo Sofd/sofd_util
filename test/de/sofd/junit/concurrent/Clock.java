@@ -52,15 +52,15 @@ public class Clock {
         this.tick = tick;
     }
 
-    public long getClockTick() {
+    public long getTick() {
         return tick;
     }
 
-    public void startOrRestartClock() {
+    public void startOrRestart() {
         this.startTimeInMillis = System.currentTimeMillis();
     }
 
-    public void clockSleep(double ticks) {
+    public void sleep(double ticks) {
         try {
             Thread.sleep((long)(tick*ticks));
         } catch (InterruptedException e) {
@@ -68,35 +68,35 @@ public class Clock {
         }
     }
 
-    public long getCurrentClockTime() {
+    public long getCurrentTime() {
         return (System.currentTimeMillis() - startTimeInMillis + tick/2)/tick;
     }
 
-    public void assertCurrentClockTimeIs(long ticks) {
-        assertEquals(getCurrentClockTime(), ticks);
+    public void assertCurrentTimeIs(long ticks) {
+        assertEquals(getCurrentTime(), ticks);
     }
 
 
     private static Clock defaultClock = new Clock();
 
-    public static long getTick() {
-        return defaultClock.getClockTick();
+    public static long getClockTick() {
+        return defaultClock.getTick();
     }
 
-    public static void startOrRestart() {
-        defaultClock.startOrRestartClock();
+    public static void startOrRestartClock() {
+        defaultClock.startOrRestart();
     }
 
-    public static void sleep(double ticks) {
-        defaultClock.clockSleep(ticks);
+    public static void clockSleep(double ticks) {
+        defaultClock.sleep(ticks);
     }
 
-    public static long getCurrentTime() {
-        return defaultClock.getCurrentClockTime();
+    public static long getCurrentClockTime() {
+        return defaultClock.getCurrentTime();
     }
 
-    public static void assertCurrentTimeIs(long ticks) {
-        defaultClock.assertCurrentClockTimeIs(ticks);
+    public static void assertCurrentClockTimeIs(long ticks) {
+        defaultClock.assertCurrentTimeIs(ticks);
     }
 
     public static Clock getDefaultClock() {
