@@ -140,7 +140,7 @@ public class NumericPriorityBlockingQueueTest {
     
     @Test
     public void testEnqueueAndRemoveST() throws Exception {
-        System.out.println("BasicST");
+        System.out.println("EnqueueAndRemoveST");
         NumericPriorityBlockingQueue<EltValue> q = new NumericPriorityBlockingQueue<EltValue>(0, 100, 10, prioFunction);
         q.put(new EltValue("foo", 10));
         q.offer(new EltValue("bar", 10));
