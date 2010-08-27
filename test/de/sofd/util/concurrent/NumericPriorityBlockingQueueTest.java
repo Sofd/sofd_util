@@ -1,6 +1,11 @@
 package de.sofd.util.concurrent;
 
+import de.sofd.junit.concurrent.ObservedThread;
 import de.sofd.lang.Function1;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import static de.sofd.junit.concurrent.Clock.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -115,7 +120,7 @@ public class NumericPriorityBlockingQueueTest {
 
     @Test
     public void testBasicEnqueueDequeueST() throws Exception {
-        System.out.println("BasicST");
+        System.out.println("testBasicEnqueueDequeueST");
         NumericPriorityBlockingQueue<EltValue> q = new NumericPriorityBlockingQueue<EltValue>(0, 100, 10, prioFunction);
         q.put(new EltValue("foo", 10));
         q.offer(new EltValue("bar", 10));
@@ -163,6 +168,53 @@ public class NumericPriorityBlockingQueueTest {
         assertNull(q.poll());
         assertNull(q.poll());
         assertTrue(q.isEmpty());
+    }
+
+    @Test
+    public void testBasicEnqueueDequeueMT() throws Exception {
+        System.out.println("BasicEnqueueDequeueMT");
+
+        final NumericPriorityBlockingQueue<EltValue> q = new NumericPriorityBlockingQueue<EltValue>(0, 100, 10, prioFunction);
+
+        startOrRestartClock();
+
+        System.out.println("t0: putting foo,bar,baz");
+        q.put(new EltValue("foo", 10));
+        q.put(new EltValue("bar", 10));
+        q.put(new EltValue("baz", 10));
+
+        final Collection<Throwable> threadErrors = Collections.synchronizedCollection(new ArrayList<Throwable>());
+        Thread t1 = new ObservedThread(threadErrors) {
+            @Override
+            protected void doRun() throws Exception {
+                System.out.println("t1: taking foo,bar,baz");
+                assertEquals("foo", q.take().getId());
+                assertEquals("bar", q.take().getId());
+                assertEquals("baz", q.take().getId());
+                System.out.println("t1: sleep 4");
+                clockSleep(4);
+                System.out.println("t1: putting hello world");
+                q.put(new EltValue("hello", 10));
+                q.put(new EltValue("world", 10));
+            }
+        };
+        t1.start();
+
+        assertCurrentClockTimeIs(0);
+        System.out.println("t0: sleep 2");
+        clockSleep(2);  // avoid race by giving t1 time to remove the two elements
+        assertCurrentClockTimeIs(2);
+        System.out.println("t0: taking hello");
+        assertEquals("hello", q.take().getId());  //take() should block for 2 ticks until t1 puts the hello element in
+        assertCurrentClockTimeIs(4);
+        System.out.println("t0: taking world");
+        assertEquals("world", q.take().getId());
+        assertCurrentClockTimeIs(4);
+
+        t1.join();
+        if (!threadErrors.isEmpty()) {
+            fail("there were errors in threads -- see output");
+        }
     }
 
 }
