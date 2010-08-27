@@ -148,6 +148,11 @@ public class NumericPriorityBlockingQueue<E> extends AbstractQueue<E> implements
     }
 
     @Override
+    public boolean remove(Object o) {
+        return null != backend.remove((E)o);
+    }
+
+    @Override
     public int remainingCapacity() {
         return Integer.MAX_VALUE;
     }
