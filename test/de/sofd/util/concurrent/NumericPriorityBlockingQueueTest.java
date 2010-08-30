@@ -230,7 +230,7 @@ public class NumericPriorityBlockingQueueTest {
     public void testPrioritizedEnqueueDequeueMT() throws Exception {
         System.out.println("PrioritizedEnqueueDequeueMT");
 
-        final NumericPriorityBlockingQueue<EltValue> q = new NumericPriorityBlockingQueue<EltValue>(0, 100, 15, prioFunction, 500, costFunction);
+        final NumericPriorityBlockingQueue<EltValue> q = new NumericPriorityBlockingQueue<EltValue>(0, 100, 15, prioFunction, 500, costFunction, false);
 
         startOrRestartClock();
 

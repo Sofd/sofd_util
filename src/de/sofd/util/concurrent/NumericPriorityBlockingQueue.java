@@ -30,6 +30,9 @@ import java.util.concurrent.TimeUnit;
  * until other threads have removed enough elements. (something like that may
  * be implemented in the future). For now, only take() will block when the
  * queue is empty.
+ * <p>
+ * There is a boolean isReverseEviction flag -- if it is true, eviction starts
+ * with the highest-priority elements, not the lowest-priority ones.
  *
  * @author olaf
  */
@@ -40,11 +43,15 @@ public class NumericPriorityBlockingQueue<E> extends AbstractQueue<E> implements
     private final Object lock = new Object();
 
     public NumericPriorityBlockingQueue(double lowPrio, double highPrio, int nBuckets, Function1<E, Double> elementPriorityFunction) {
-        this(lowPrio, highPrio, nBuckets, elementPriorityFunction, -1, null);
+        this(lowPrio, highPrio, nBuckets, elementPriorityFunction, -1, null, true);
     }
 
-    public NumericPriorityBlockingQueue(double lowPrio, double highPrio, int nBuckets, Function1<E, Double> elementPriorityFunction, double maxTotalCost, Function1<E, Double> elementCostFunction) {
-        this.backend = new BucketedPriorityCache<E, E>(lowPrio, highPrio, nBuckets, maxTotalCost, elementCostFunction);
+    public NumericPriorityBlockingQueue(double lowPrio, double highPrio, int nBuckets, Function1<E, Double> elementPriorityFunction, boolean reverseEviction) {
+        this(lowPrio, highPrio, nBuckets, elementPriorityFunction, -1, null, reverseEviction);
+    }
+
+    public NumericPriorityBlockingQueue(double lowPrio, double highPrio, int nBuckets, Function1<E, Double> elementPriorityFunction, double maxTotalCost, Function1<E, Double> elementCostFunction, boolean reverseEviction) {
+        this.backend = new BucketedPriorityCache<E, E>(lowPrio, highPrio, nBuckets, maxTotalCost, elementCostFunction, reverseEviction);
         this.elementPriorityFunction = elementPriorityFunction;
     }
 
@@ -190,4 +197,11 @@ public class NumericPriorityBlockingQueue<E> extends AbstractQueue<E> implements
         return backend.getMaxTotalCost();
     }
 
+    public boolean isReverseEviction() {
+        return backend.isReverseEviction();
+    }
+
+    public void setReverseEviction(boolean reverseEviction) {
+        backend.setReverseEviction(reverseEviction);
+    }
 }

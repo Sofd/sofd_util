@@ -241,10 +241,12 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         return new EntryIterator(true);
     }
 
+    @Override
     public boolean isReverseEviction() {
         return reverseEviction;
     }
 
+    @Override
     public void setReverseEviction(boolean reverseEviction) {
         this.reverseEviction = reverseEviction;
     }

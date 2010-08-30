@@ -24,6 +24,9 @@ import java.util.Iterator;
  * for all elements, so the {@link #getMaxTotalCost()} will effectively be the
  * maximum number of elements in the cache. Please note that the cost function's
  * value MUST NOT change for an element as long as it stays in the cache.
+ * <p>
+ * There is a boolean isReverseEviction flag -- if it is true, eviction starts
+ * with the highest-priority elements, not the lowest-priority ones.
  * 
  * @author olaf
  * 
