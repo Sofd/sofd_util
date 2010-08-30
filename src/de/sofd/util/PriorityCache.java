@@ -32,6 +32,10 @@ import java.util.Iterator;
  */
 public interface PriorityCache<K, V> {
 
+    boolean isReverseEviction();
+
+    void setReverseEviction(boolean reverseEviction);
+
     public interface Entry<K, V> {
         K getKey();
         V getValue();

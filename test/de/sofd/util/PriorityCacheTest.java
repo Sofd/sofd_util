@@ -254,6 +254,27 @@ public class PriorityCacheTest {
     }
 
     @Test
+    public void testReversePriorities2() {
+        System.out.println("ReversePriorities2");
+        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 30, 500, costFunction);
+        pc.setReverseEviction(true);
+        assertTrue(pc.isEmpty());
+        assertEquals(0, pc.getCurrentTotalCost(), 0.001);
+        pc.put("c30-p50", new EltValue("1", 30), 50);
+        pc.put("c40-p60", new EltValue("2", 40), 60);
+        pc.put("c20-p80", new EltValue("3", 20), 80);
+        pc.put("c50-p75", new EltValue("4", 50), 75);
+        pc.put("c30-p65", new EltValue("5", 30), 65);
+        pc.put("c40-p75", new EltValue("6", 40), 75);
+        pc.put("c20-p75", new EltValue("7", 20), 75);
+        pc.put("c25-p76", new EltValue("8", 25), 76);
+        assertEquals(255, pc.getCurrentTotalCost(), 0.001);
+        pc.put("c380-p40", new EltValue("9", 380), 40);
+        assertEquals(480, pc.getCurrentTotalCost(), 0.001);
+        assertEquals(4, pc.size());
+    }
+
+    @Test
     public void testDefaultUnlimitedCost() {
         System.out.println("DefaultUnlimitedCost");
         PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, -1, null);

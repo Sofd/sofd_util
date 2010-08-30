@@ -65,6 +65,8 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
     double totalCost = 0;
     double maxTotalCost;
 
+    boolean reverseEviction = false;
+
     /**
      * Creates a default PriorityCache with a 0..10 sensitive priority range and
      * 10 buckets. The maximum total cost will be 1000, the element cost
@@ -72,7 +74,12 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
      * to a maximum of 1000 elements.
      */
     public BucketedPriorityCache() {
-        this(0, 10, 10, 1000, null);
+        this(0, 10, 10, 1000, null, false);
+    }
+
+    public BucketedPriorityCache(double lowPrio, double highPrio, int nBuckets,
+            double maxTotalCost, Function1<V, Double> elementCostFunction) {
+        this(lowPrio, highPrio, nBuckets, maxTotalCost, elementCostFunction, false);
     }
 
     /**
@@ -96,7 +103,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
      */
     @SuppressWarnings("unchecked")
     public BucketedPriorityCache(double lowPrio, double highPrio, int nBuckets,
-            double maxTotalCost, Function1<V, Double> elementCostFunction) {
+            double maxTotalCost, Function1<V, Double> elementCostFunction, boolean reverseEvitcion) {
         if (lowPrio >= highPrio || nBuckets <= 0) {
             throw new IllegalArgumentException();
         }
@@ -105,6 +112,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         this.nBuckets = nBuckets;
         this.maxBucketNr = nBuckets - 1;
         this.buckets = new LinkedHashMap[nBuckets];
+        this.reverseEviction = reverseEvitcion;
         for (int i = 0; i < nBuckets; i++) {
             buckets[i] = new LinkedHashMap<K, EntryImpl<K,V>>(256, 0.75F, false);  //TODO: could access-order really be guaranteed to the outside (b/c internal accesses)?
         }
@@ -233,6 +241,14 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         return new EntryIterator(true);
     }
 
+    public boolean isReverseEviction() {
+        return reverseEviction;
+    }
+
+    public void setReverseEviction(boolean reverseEviction) {
+        this.reverseEviction = reverseEviction;
+    }
+
     //TODO: synchronization...
     protected class EntryIterator implements Iterator<Entry<K, V>> {
         private boolean hasNext;
@@ -300,7 +316,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         if (maxTotalCost < 0) {
             return;
         }
-        Iterator<Entry<K,V>> it = entryIterator();
+        Iterator<Entry<K,V>> it = isReverseEviction() ? reverseEntryIterator() : entryIterator();
         while ((totalCost > maxTotalCost) && (entries.size() > 1)) {
             it.next();
             it.remove();
