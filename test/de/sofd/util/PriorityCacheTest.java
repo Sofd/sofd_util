@@ -218,6 +218,26 @@ public class PriorityCacheTest {
     }
 
     @Test
+    public void testPriorities2() {
+        System.out.println("Priorities2");
+        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 30, 500, costFunction);
+        assertTrue(pc.isEmpty());
+        assertEquals(0, pc.getCurrentTotalCost(), 0.001);
+        pc.put("c30-p50", new EltValue("1", 30), 50);
+        pc.put("c40-p40", new EltValue("2", 40), 40);
+        pc.put("c20-p20", new EltValue("3", 20), 20);
+        pc.put("c50-p25", new EltValue("4", 50), 25);
+        pc.put("c30-p35", new EltValue("5", 30), 35);
+        pc.put("c40-p25", new EltValue("6", 40), 25);
+        pc.put("c20-p25", new EltValue("7", 20), 25);
+        pc.put("c25-p24", new EltValue("8", 25), 24);
+        assertEquals(255, pc.getCurrentTotalCost(), 0.001);
+        pc.put("c380-p60", new EltValue("9", 380), 60);
+        assertEquals(480, pc.getCurrentTotalCost(), 0.001);
+        assertEquals(4, pc.size());
+    }
+
+    @Test
     public void testDefaultUnlimitedCost() {
         System.out.println("DefaultUnlimitedCost");
         PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, -1, null);
