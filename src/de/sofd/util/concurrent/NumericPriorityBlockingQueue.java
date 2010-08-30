@@ -176,8 +176,18 @@ public class NumericPriorityBlockingQueue<E> extends AbstractQueue<E> implements
         return n;
     }
 
+    public double getCurrentTotalCost() {
+        return backend.getCurrentTotalCost();
+    }
+
     public void setMaxTotalCost(double value) {
-        backend.setMaxTotalCost(value);
+        synchronized (lock) {
+            backend.setMaxTotalCost(value);
+        }
+    }
+
+    public double getMaxTotalCost() {
+        return backend.getMaxTotalCost();
     }
 
 }

@@ -5,6 +5,7 @@ import de.sofd.lang.Function1;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.NoSuchElementException;
 import static de.sofd.junit.concurrent.Clock.*;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -205,6 +206,13 @@ public class NumericPriorityBlockingQueueTest {
         clockSleep(2);  // avoid race by giving t1 time to remove the two elements
         assertCurrentClockTimeIs(2);
         System.out.println("t0: taking hello");
+        assertNull(q.poll());
+        try {
+            q.remove();
+            fail("NoSuchElementException expected");
+        } catch (NoSuchElementException e) {
+        }
+        assertCurrentClockTimeIs(2);
         assertEquals("hello", q.take().getId());  //take() should block for 2 ticks until t1 puts the hello element in
         assertCurrentClockTimeIs(4);
         System.out.println("t0: taking world");
@@ -217,4 +225,52 @@ public class NumericPriorityBlockingQueueTest {
         }
     }
 
+
+    @Test
+    public void testPrioritizedEnqueueDequeueMT() throws Exception {
+        System.out.println("PrioritizedEnqueueDequeueMT");
+
+        final NumericPriorityBlockingQueue<EltValue> q = new NumericPriorityBlockingQueue<EltValue>(0, 100, 15, prioFunction, 500, costFunction);
+
+        startOrRestartClock();
+
+        final Collection<Throwable> threadErrors = Collections.synchronizedCollection(new ArrayList<Throwable>());
+        Thread t1 = new ObservedThread(threadErrors) {
+            @Override
+            protected void doRun() throws Exception {
+                assertCurrentClockTimeIs(0);
+                System.out.println("t1: taking 1st");
+                assertEquals("p40-c70", q.take().getId());
+                assertCurrentClockTimeIs(3);
+                clockSleep(4);
+                System.out.println("t1: taking others");
+                assertEquals("p30-c100", q.take().getId());
+                assertEquals("p40-c100", q.take().getId());
+                assertEquals("p50-c50", q.take().getId());
+                assertEquals("p60-c70", q.take().getId());
+                assertEquals("p80-c120", q.take().getId());
+            }
+        };
+        t1.start();
+
+        clockSleep(3);
+        System.out.println("t0: putting");
+        q.put(new EltValue("p40-c70", 40, 70));
+
+        clockSleep(2);
+        System.out.println("t0: putting others");
+        q.put(new EltValue("p60-c70", 60, 70));
+        q.put(new EltValue("p40-c100", 40, 100));
+        q.put(new EltValue("p50-c50", 50, 50));
+        q.put(new EltValue("p80-c120", 80, 120));
+        q.put(new EltValue("p20-c90", 20, 90));
+        assertEquals(430, q.getCurrentTotalCost(), 0.001);
+        q.put(new EltValue("p30-c100", 30, 100));
+        assertEquals(440, q.getCurrentTotalCost(), 0.001);
+
+        t1.join();
+        if (!threadErrors.isEmpty()) {
+            fail("there were errors in threads -- see output");
+        }
+    }
 }
