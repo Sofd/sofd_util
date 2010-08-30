@@ -1,5 +1,6 @@
 package de.sofd.util;
 
+import de.sofd.lang.Function1;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -183,6 +184,143 @@ public class MoreCollections {
             public Iterator<T> iterator() {
                 return iterator;
             }
+        };
+    }
+
+
+
+    /**
+     * 
+     * @param <T>
+     * @param <T2>
+     * @param input any iterator
+     * @param mapFn function to be applied to each element of input
+     * @return iterator over the results of applying mapFn to the elements of input
+     */
+    public static <T, T2> Iterator<T2> mappedIterator(final Iterator<? extends T> input, final Function1<T, T2> mapFn) {
+        return new Iterator<T2>() {
+            @Override
+            public boolean hasNext() {
+                return input.hasNext();
+            }
+            @Override
+            public T2 next() {
+                return mapFn.run(input.next());
+            }
+            @Override
+            public void remove() {
+                input.remove();
+            }
+        };
+    }
+
+
+    /**
+     *
+     * @param <T>
+     * @param <T2>
+     * @param input any Iterable
+     * @param mapFn function to be applied to each element of input
+     * @return Iterable containing the results of applying mapFn to the elements of input
+     */
+    public static <T, T2> Iterable<T2> mappedIterable(final Iterable<T> input, final Function1<T, T2> mapFn) {
+        return new Iterable<T2>() {
+            @Override
+            public Iterator<T2> iterator() {
+                return mappedIterator(input.iterator(), mapFn);
+            }
+        };
+    }
+
+    /**
+     * 
+     * @param <T>
+     * @param <T2>
+     * @param input any collection
+     * @param mapFn function to be applied to each element of input
+     * @return collection containing the results of applying mapFn to the elements of input
+     */
+    public static <T, T2> Collection<T2> mappedCollection(final Collection<? extends T> input, final Function1<T, T2> mapFn) {
+        return new Collection<T2>() {
+            private Collection<T2> backend = new ArrayList<T2>();
+            {
+                for (T2 elt: iterableContaining(mappedIterator(input.iterator(), mapFn))) {
+                    backend.add(elt);
+                }
+            }
+
+            @Override
+            public Iterator<T2> iterator() {
+                return backend.iterator();
+            }
+
+            @Override
+            public boolean add(T2 e) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean addAll(Collection<? extends T2> c) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void clear() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean contains(Object o) {
+                return backend.contains(o);
+            }
+
+            @Override
+            public boolean containsAll(Collection<?> c) {
+                return backend.containsAll(c);
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return backend.isEmpty();
+            }
+
+            @Override
+            public boolean remove(Object o) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean removeAll(Collection<?> c) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean retainAll(Collection<?> c) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int size() {
+                return backend.size();
+            }
+
+            @Override
+            public Object[] toArray() {
+                return backend.toArray();
+            }
+
+            @Override
+            public <T> T[] toArray(T[] a) {
+                return backend.toArray(a);
+            }
+
+            /**
+            //doesn't work b/c of "type erasure"
+            @Override
+            public <T2 extends T> T2[] toArray(T2[] a) {
+                return backend.toArray(a);
+            }
+            */
         };
     }
 }
