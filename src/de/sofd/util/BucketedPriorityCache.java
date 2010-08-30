@@ -216,19 +216,34 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         return elementCostFunction;
     }
 
-    public Iterator<Entry<K,V>> entryIterator()   {
-        return new EntryIterator();
+    @Override
+    public Iterator<Entry<K,V>> entryIterator() {
+        return new EntryIterator(false);
+    }
+
+    /**
+     * Iterator that returns the entries back-to-front. Won't be the complete reverse
+     * to entryIterator(): entries from the same bucket will be returned in the same
+     * order as in the entryIterator() (due to implementation issues).
+     * 
+     * @return
+     */
+    @Override
+    public Iterator<Entry<K,V>> reverseEntryIterator() {
+        return new EntryIterator(true);
     }
 
     //TODO: synchronization...
     protected class EntryIterator implements Iterator<Entry<K, V>> {
-        boolean hasNext;
-        Entry<K, V> lastNext;
-        int currBucketNo;
-        Iterator<Map.Entry<K, EntryImpl<K,V>>> currBucketIterator, lastBucketIterator;
+        private boolean hasNext;
+        private Entry<K, V> lastNext;
+        private int currBucketNo;
+        private Iterator<Map.Entry<K, EntryImpl<K,V>>> currBucketIterator, lastBucketIterator;
+        private boolean isReverse;
 
-        public EntryIterator() {
-            currBucketNo = 0;
+        public EntryIterator(boolean isReverse) {
+            this.isReverse = isReverse;
+            currBucketNo = isReverse ? nBuckets - 1 : 0;
             currBucketIterator = buckets[currBucketNo].entrySet().iterator();
             advanceToNext();
         }
@@ -237,12 +252,14 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
             if (currBucketIterator.hasNext()) {
                 hasNext = true;
             } else {
-                for (int iBucket = currBucketNo + 1; iBucket < nBuckets; iBucket++) {
+                int increment = isReverse ? -1 : 1;
+                int stop = isReverse ? -1 : nBuckets;
+                for (int iBucket = currBucketNo + increment; iBucket != stop; iBucket += increment) {
                     LinkedHashMap<K, EntryImpl<K,V>> bucket = buckets[iBucket];
                     if (bucket.isEmpty()) {
                         continue;
                     }
-                    currBucketIterator = bucket.entrySet().iterator();
+                    currBucketIterator = bucket.entrySet().iterator(); //no reverseIterator() for isReverse :-(
                     currBucketNo = iBucket;
                     hasNext = true;
                     return;

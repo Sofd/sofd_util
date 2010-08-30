@@ -96,7 +96,8 @@ public class PriorityCacheTest {
         pc.put("2", new EltValue("bar", 50), 90);
         pc.put("3", new EltValue("baz", 20), 70);
         assertFalse(pc.isEmpty());
-        assertIterationValues(pc, "foo", "baz", "bar");
+        assertIterationValues(pc, false, "foo", "baz", "bar");
+        assertIterationValues(pc, true, "bar", "baz", "foo");
 
         Iterator<PriorityCache.Entry<String, EltValue>>  it = pc.entryIterator();
         assertTrue(it.hasNext());
@@ -116,22 +117,23 @@ public class PriorityCacheTest {
         assertEquals("bar", ce.getValue().getId());
         assertEquals(50, ce.getValue().getCost(), 0.001);
         assertFalse(it.hasNext());
-        assertIterationValues(pc, "foo", "bar");
+        assertIterationValues(pc, false, "foo", "bar");
+        assertIterationValues(pc, true,  "bar", "foo");
         assertEquals(2, pc.size());
 
         ArrayList<EltValue> drainage = new ArrayList<EltValue>();
-        for (it = pc.entryIterator(); it.hasNext();) {
+        for (it = pc.reverseEntryIterator(); it.hasNext();) {
             drainage.add(it.next().getValue());
             it.remove();
         }
         assertTrue(pc.isEmpty());
         assertEquals(2, drainage.size());
-        assertEquals("foo", drainage.get(0).getId());
-        assertEquals("bar", drainage.get(1).getId());
+        assertEquals("bar", drainage.get(0).getId());
+        assertEquals("foo", drainage.get(1).getId());
     }
 
-    protected void assertIterationValues(PriorityCache<String, EltValue> pc, String... values) {
-        Iterator<PriorityCache.Entry<String, EltValue>> it = pc.entryIterator();
+    protected void assertIterationValues(PriorityCache<String, EltValue> pc, boolean reverse, String... values) {
+        Iterator<PriorityCache.Entry<String, EltValue>> it = reverse ? pc.reverseEntryIterator() : pc.entryIterator();
         for (String v : values) {
             assertTrue(it.hasNext());
             PriorityCache.Entry<String, EltValue> e = it.next();
@@ -171,7 +173,7 @@ public class PriorityCacheTest {
         pc.put("c110-p60", new EltValue("4", 110), 60);
         assertEquals(420, pc.getCurrentTotalCost(), 0.001);
         assertEquals(4, pc.size());
-        assertIterationValues(pc, "2", "1", "4", "3");
+        assertIterationValues(pc, false, "2", "1", "4", "3");
         pc.put("c150-p60", new EltValue("5", 150), 60); // cost 500 exceeded => lowest-prio element (c130-p40) evicted
         assertEquals(4, pc.size());
         assertEquals(440, pc.getCurrentTotalCost(), 0.001); // 420 + 150 - 130
@@ -180,7 +182,8 @@ public class PriorityCacheTest {
         pc.put("c50-p40", new EltValue("6", 50), 40);
         assertEquals(5, pc.size());
         assertEquals(490, pc.getCurrentTotalCost(), 0.001);
-        assertIterationValues(pc, "6", "1", "4", "5", "3");
+        assertIterationValues(pc, false, "6", "1", "4", "5", "3");
+        assertIterationValues(pc, true, "3", "4", "5", "1", "6");
 
         pc.put("c200-p70", new EltValue("7", 200), 70); // should evict c50-p40, c100-p50, c110-p60 (NOT c150-p60 b/c of insertion-ordered eviction for equal-prio elts.)
         assertEquals(3, pc.size());
@@ -189,7 +192,7 @@ public class PriorityCacheTest {
         assertEquals("3", pc.get("c80-p100").getId());
         assertEquals("5", pc.get("c150-p60").getId());
         assertEquals("7", pc.get("c200-p70").getId());
-        assertIterationValues(pc, "5", "7", "3");
+        assertIterationValues(pc, false, "5", "7", "3");
 
         pc.setMaxTotalCost(200);   // should evict c150-p60, c200-p70
         assertEquals(1, pc.size());
@@ -205,7 +208,7 @@ public class PriorityCacheTest {
         assertEquals(150, pc.getCurrentTotalCost(), 0.001); // 170+60-80
         assertEquals(4, pc.size());
         assertNull(pc.get("c80-p100"));
-        assertIterationValues(pc, "8", "10", "9", "11");
+        assertIterationValues(pc, false, "8", "10", "9", "11");
         //assertion for access-ordered iteration -- not implemented atm.
         //assertEquals(40, pc.get("c40-p40").getCost(), 0.001);
         //assertIterationValues(pc, "10", "8", "9", "11");
@@ -214,7 +217,7 @@ public class PriorityCacheTest {
         pc.put("c200-p85", new EltValue("12", 200), 85);
         pc.put("c400-p45", new EltValue("13", 400), 45);
         assertEquals(750, pc.getCurrentTotalCost(), 0.001);
-        assertIterationValues(pc, "8", "10", "13", "9", "11", "12");
+        assertIterationValues(pc, false, "8", "10", "13", "9", "11", "12");
 
         ArrayList<EltValue> drainage = new ArrayList<EltValue>();
         for (Iterator<PriorityCache.Entry<String, EltValue>> it = pc.entryIterator(); it.hasNext();) {

@@ -66,4 +66,6 @@ public interface PriorityCache<K, V> {
 
     Iterator<Entry<K, V>> entryIterator();
 
+    public Iterator<Entry<K,V>> reverseEntryIterator();
+
 }
