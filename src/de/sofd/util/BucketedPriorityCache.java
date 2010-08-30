@@ -225,7 +225,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         boolean hasNext;
         Entry<K, V> lastNext;
         int currBucketNo;
-        Iterator<Map.Entry<K, EntryImpl<K,V>>> currBucketIterator;
+        Iterator<Map.Entry<K, EntryImpl<K,V>>> currBucketIterator, lastBucketIterator;
 
         public EntryIterator() {
             currBucketNo = 0;
@@ -262,6 +262,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
                 throw new NoSuchElementException();
             }
             lastNext = currBucketIterator.next().getValue();
+            lastBucketIterator = currBucketIterator;
             advanceToNext();
             return lastNext;
         }
@@ -271,7 +272,9 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
             if (lastNext == null) {
                 throw new IllegalStateException();
             }
-            BucketedPriorityCache.this.remove(lastNext.getKey());
+            lastBucketIterator.remove();
+            entries.remove(lastNext.getKey());
+            totalCost -= elementCostFunction.run(lastNext.getValue());
             lastNext = null;
         }
     };
@@ -280,22 +283,10 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         if (maxTotalCost < 0) {
             return;
         }
+        Iterator<Entry<K,V>> it = entryIterator();
         while ((totalCost > maxTotalCost) && (entries.size() > 1)) {
-            // ^^^ ensure size >= 1 to always keep at least one element in, even
-            // if it alone exceeds maxTotalCost
-            for (int iBucket = 0; iBucket < nBuckets; iBucket++) {
-                LinkedHashMap<K, EntryImpl<K,V>> bucket = buckets[iBucket];
-                if (bucket.isEmpty()) {
-                    continue;
-                }
-                Map.Entry<K, EntryImpl<K,V>> oldestMapEntry = bucket.entrySet()
-                        .iterator().next();
-                EntryImpl<K,V> oldestEntry = oldestMapEntry.getValue();
-                totalCost -= elementCostFunction.run(oldestEntry.v);
-                bucket.remove(oldestMapEntry.getKey());
-                entries.remove(oldestMapEntry.getKey());
-                break;
-            }
+            it.next();
+            it.remove();
         }
     }
 

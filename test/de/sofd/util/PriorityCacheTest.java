@@ -1,8 +1,8 @@
 package de.sofd.util;
 
 import de.sofd.lang.Function1;
+import static de.sofd.util.MoreCollections.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -215,6 +215,19 @@ public class PriorityCacheTest {
         pc.put("c400-p45", new EltValue("13", 400), 45);
         assertEquals(750, pc.getCurrentTotalCost(), 0.001);
         assertIterationValues(pc, "8", "10", "13", "9", "11", "12");
+
+        ArrayList<EltValue> drainage = new ArrayList<EltValue>();
+        for (Iterator<PriorityCache.Entry<String, EltValue>> it = pc.entryIterator(); it.hasNext();) {
+            drainage.add(it.next().getValue());
+            it.remove();
+        }
+        assertTrue(pc.isEmpty());
+        assertArrayEquals(new Object[]{"8", "10", "13", "9", "11", "12"}, mappedCollection(drainage, new Function1<EltValue, String>() {
+            @Override
+            public String run(EltValue v) {
+                return v.getId();
+            }
+        }).toArray());
     }
 
     @Test
