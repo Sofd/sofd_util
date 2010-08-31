@@ -40,19 +40,75 @@ public class NumericPriorityThreadPoolExecutor extends ThreadPoolExecutor {
     //covariant return types
 
     @Override
-    public PrioritizedTask<?> submit(Runnable task) {
-        return (PrioritizedTask<?>) super.submit(task);
+    public PrioritizedTask<Object> submit(Runnable task) {
+        return submitWithPriority(task, 0);
     }
 
     @Override
     public <T> PrioritizedTask<T> submit(Runnable task, T result) {
-        return (PrioritizedTask<T>) super.submit(task, result);
+        return submitWithPriority(task, result, 0);
     }
 
     @Override
     public <T> PrioritizedTask<T> submit(Callable<T> task) {
-        return (PrioritizedTask<T>) super.submit(task);
+        return submitWithPriority(task, 0);
     }
 
-    //TODO: continue...
+    public PrioritizedTask<Object> submitWithPriority(Runnable task, double priority) {
+        return submitWithPriority(task, null, priority);
+    }
+
+    public <T> PrioritizedTask<T> submitWithPriority(Runnable task, T result, double priority) {
+        if (task == null) throw new NullPointerException();
+        PrioritizedTask<T> ftask = newTaskFor(task, result);
+        ftask.priority = priority;
+        execute(ftask);
+        return ftask;
+    }
+
+    public <T> PrioritizedTask<T> submitWithPriority(Callable<T> callable, double priority) {
+        if (callable == null) throw new NullPointerException();
+        PrioritizedTask<T> ftask = newTaskFor(callable);
+        ftask.priority = priority;
+        execute(ftask);
+        return ftask;
+    }
+
+    public <T> PrioritizedTask<T> resubmitWithPriority(PrioritizedTask<T> task, double priority) {
+        if (!remove(task)) {
+            throw new IllegalArgumentException();
+        }
+        PrioritizedTask<T> ftask;
+        if (null != task.wrappedRunnable) {
+            ftask = newTaskFor(task.wrappedRunnable, task.wrappedResult);
+        } else {
+            ftask = newTaskFor(task.wrappedCallable);
+        }
+        ftask.priority = priority;
+        execute(ftask);
+        return ftask;
+    }
+
+
+
+    @Override
+    protected <T> PrioritizedTask<T> newTaskFor(Runnable runnable, T value) {
+        PrioritizedTask<T> result = new PrioritizedTask<T>(runnable, value);
+        if (runnable instanceof PrioritizedTask) {
+             result.priority = ((PrioritizedTask)runnable).getPriority();
+        }
+        result.owner = this;
+        return result;
+    }
+
+    @Override
+    protected <T> PrioritizedTask<T> newTaskFor(Callable<T> callable) {
+        PrioritizedTask result = new PrioritizedTask<T>(callable);
+        if (callable instanceof PrioritizedTask) {
+             result.priority = ((PrioritizedTask)callable).getPriority();
+        }
+        result.owner = this;
+        return result;
+    }
+
 }
