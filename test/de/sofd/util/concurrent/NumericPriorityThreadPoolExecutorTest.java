@@ -31,9 +31,9 @@ public class NumericPriorityThreadPoolExecutorTest {
 
         @Override
         public void run() {
-            writeLogMessage(name+" started");
+            writeLogMessage(name + " started");
             clockSleep(sleepTime);
-            writeLogMessage(name+" finished");
+            writeLogMessage(name + " finished");
         }
 
         @Override
@@ -65,6 +65,7 @@ public class NumericPriorityThreadPoolExecutorTest {
     @Test
     public void testOneThread() throws Exception {
         System.out.println("testOneThread");
+        Thread.sleep(100);  // aesthetic measure (stdout/stderr ouputs may appear in wrong order otherwise)
         clearMessageLog();
         startOrRestartClock();
         NumericPriorityThreadPoolExecutor e1 = NumericPriorityThreadPoolExecutor.newFixedThreadPool(1, 10);
@@ -92,6 +93,7 @@ public class NumericPriorityThreadPoolExecutorTest {
     @Test
     public void testTwoThreads() throws Exception {
         System.out.println("testTwoThreads");
+        Thread.sleep(100);
         clearMessageLog();
         startOrRestartClock();
         NumericPriorityThreadPoolExecutor e = NumericPriorityThreadPoolExecutor.newFixedThreadPool(2, 10);
@@ -120,6 +122,7 @@ public class NumericPriorityThreadPoolExecutorTest {
     @Test
     public void testOneThreadWithPriorities() throws Exception {
         System.out.println("testOneThreadWithPriorities");
+        Thread.sleep(100);
         clearMessageLog();
         startOrRestartClock();
         NumericPriorityThreadPoolExecutor e = NumericPriorityThreadPoolExecutor.newFixedThreadPool(1, 10);
@@ -164,6 +167,7 @@ public class NumericPriorityThreadPoolExecutorTest {
     @Test
     public void testTwoThreadsWithPriorities() throws Exception {
         System.out.println("testTwoThreadsWithPriorities");
+        Thread.sleep(100);
         clearMessageLog();
         startOrRestartClock();
         NumericPriorityThreadPoolExecutor e = NumericPriorityThreadPoolExecutor.newFixedThreadPool(2, 10);
@@ -197,8 +201,53 @@ public class NumericPriorityThreadPoolExecutorTest {
     }
 
     @Test
+    public void testTwoThreadsWithWaiting() throws Exception {
+        System.out.println("testTwoThreadsWithWaiting");
+        Thread.sleep(100);
+        clearMessageLog();
+        startOrRestartClock();
+        NumericPriorityThreadPoolExecutor e = NumericPriorityThreadPoolExecutor.newFixedThreadPool(2, 10);
+        PrioritizedTask<Object> sleeper5, sleeper11;
+        e.submit(new Sleeper("sleeper2ticks",2));
+        e.submit(new Sleeper("sleeper3ticks",3));
+        sleeper5  = e.submit(new Sleeper("sleeper5ticks",5));
+        e.submit(new Sleeper("sleeper7ticks",7));
+        sleeper11 = e.submit(new Sleeper("sleeper11ticks",11));
+        sleeper5.get();
+        assertCurrentClockTimeIs(7);
+        clockSleep(1);
+        assertLogMessagesEqual(
+                new Message(0,"sleeper2ticks started"),
+                new Message(0,"sleeper3ticks started"),
+                new Message(2,"sleeper2ticks finished"),
+                new Message(2,"sleeper5ticks started"),
+                new Message(3,"sleeper3ticks finished"),
+                new Message(3,"sleeper7ticks started"),
+                new Message(7,"sleeper5ticks finished"),
+                new Message(7,"sleeper11ticks started")
+        );
+        sleeper11.get();
+        assertCurrentClockTimeIs(18);
+        sleeper11.get();
+        assertCurrentClockTimeIs(18);
+        assertLogMessagesEqual(
+                new Message(0,"sleeper2ticks started"),
+                new Message(0,"sleeper3ticks started"),
+                new Message(2,"sleeper2ticks finished"),
+                new Message(2,"sleeper5ticks started"),
+                new Message(3,"sleeper3ticks finished"),
+                new Message(3,"sleeper7ticks started"),
+                new Message(7,"sleeper5ticks finished"),
+                new Message(7,"sleeper11ticks started"),
+                new Message(10,"sleeper7ticks finished"),
+                new Message(18,"sleeper11ticks finished")
+        );
+    }
+
+    @Test
     public void testOneThreadWithPriorityChangesAndWaiting() throws Exception {
         System.out.println("testOneThreadWithPriorityChangesAndWaiting");
+        Thread.sleep(100);
         clearMessageLog();
         startOrRestartClock();
         NumericPriorityThreadPoolExecutor e = NumericPriorityThreadPoolExecutor.newFixedThreadPool(1, 10);

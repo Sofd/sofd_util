@@ -92,6 +92,18 @@ public class NumericPriorityThreadPoolExecutor extends ThreadPoolExecutor {
         return ftask;
     }
 
+    /**
+     * Resubmit an existing task with a new priority (essentially, change an existing
+     * task's priority.
+     *
+     * @param <T>
+     * @param task the task whose priority you want to change
+     * @param priority the new priority
+     * @return PrioritizedTask object representing the changed task. PLEASE NOTE that
+     *         this PrioritizedTask REPLACES the task parameter, which will NO LONGER BE VALID
+     *         for this executor.
+     * @throws IllegalArgumentException if task wasn't queued in this executor
+     */
     public <T> PrioritizedTask<T> resubmitWithPriority(PrioritizedTask<T> task, double priority) {
         if (!remove(task)) {
             throw new IllegalArgumentException();
