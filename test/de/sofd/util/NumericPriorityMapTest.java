@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
  *
  * @author olaf
  */
-public class PriorityCacheTest {
+public class NumericPriorityMapTest {
 
     protected static class EltValue {
         private String id;
@@ -44,7 +44,7 @@ public class PriorityCacheTest {
 
     };
 
-    public PriorityCacheTest() {
+    public NumericPriorityMapTest() {
     }
 
     @BeforeClass
@@ -66,7 +66,7 @@ public class PriorityCacheTest {
     @Test
     public void testSimpleMapping() {
         System.out.println("SimpleMapping");
-        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
+        NumericPriorityMap<String, EltValue> pc = new BucketedNumericPriorityMap<String, EltValue>(0, 100, 10, 1000, costFunction);
         assertTrue(pc.isEmpty());
         pc.put("foo", new EltValue("foo", 1), 0);
         pc.put("bar", new EltValue("bar", 1), 0);
@@ -90,7 +90,7 @@ public class PriorityCacheTest {
     @Test
     public void testSimpleIteration() {
         System.out.println("SimpleIteration");
-        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
+        NumericPriorityMap<String, EltValue> pc = new BucketedNumericPriorityMap<String, EltValue>(0, 100, 10, 1000, costFunction);
         assertTrue(pc.isEmpty());
         pc.put("1", new EltValue("foo", 10), 30);
         pc.put("2", new EltValue("bar", 50), 90);
@@ -99,9 +99,9 @@ public class PriorityCacheTest {
         assertIterationValues(pc, false, "foo", "baz", "bar");
         assertIterationValues(pc, true, "bar", "baz", "foo");
 
-        Iterator<PriorityCache.Entry<String, EltValue>>  it = pc.entryIterator();
+        Iterator<NumericPriorityMap.Entry<String, EltValue>>  it = pc.entryIterator();
         assertTrue(it.hasNext());
-        PriorityCache.Entry<String, EltValue> ce = it.next();
+        NumericPriorityMap.Entry<String, EltValue> ce = it.next();
         assertEquals("1", ce.getKey());
         assertEquals("foo", ce.getValue().getId());
         assertEquals(10, ce.getValue().getCost(), 0.001);
@@ -132,11 +132,11 @@ public class PriorityCacheTest {
         assertEquals("foo", drainage.get(1).getId());
     }
 
-    protected void assertIterationValues(PriorityCache<String, EltValue> pc, boolean reverse, String... values) {
-        Iterator<PriorityCache.Entry<String, EltValue>> it = reverse ? pc.reverseEntryIterator() : pc.entryIterator();
+    protected void assertIterationValues(NumericPriorityMap<String, EltValue> pc, boolean reverse, String... values) {
+        Iterator<NumericPriorityMap.Entry<String, EltValue>> it = reverse ? pc.reverseEntryIterator() : pc.entryIterator();
         for (String v : values) {
             assertTrue(it.hasNext());
-            PriorityCache.Entry<String, EltValue> e = it.next();
+            NumericPriorityMap.Entry<String, EltValue> e = it.next();
             assertEquals(v, e.getValue().getId());
         }
         assertFalse(it.hasNext());
@@ -145,7 +145,7 @@ public class PriorityCacheTest {
     @Test
     public void testTotalCost() {
         System.out.println("TotalCost");
-        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 1000, costFunction);
+        NumericPriorityMap<String, EltValue> pc = new BucketedNumericPriorityMap<String, EltValue>(0, 100, 10, 1000, costFunction);
         assertTrue(pc.isEmpty());
         assertEquals(0, pc.getCurrentTotalCost(), 0.001);
         pc.put("foo", new EltValue("foo", 10), 0);
@@ -162,7 +162,7 @@ public class PriorityCacheTest {
     @Test
     public void testPriorities() {
         System.out.println("Priorities");
-        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, 500, costFunction);
+        NumericPriorityMap<String, EltValue> pc = new BucketedNumericPriorityMap<String, EltValue>(0, 100, 10, 500, costFunction);
         assertTrue(pc.isEmpty());
         assertEquals(0, pc.getCurrentTotalCost(), 0.001);
         pc.put("c100-p50", new EltValue("1", 100), 50);
@@ -220,7 +220,7 @@ public class PriorityCacheTest {
         assertIterationValues(pc, false, "8", "10", "13", "9", "11", "12");
 
         ArrayList<EltValue> drainage = new ArrayList<EltValue>();
-        for (Iterator<PriorityCache.Entry<String, EltValue>> it = pc.entryIterator(); it.hasNext();) {
+        for (Iterator<NumericPriorityMap.Entry<String, EltValue>> it = pc.entryIterator(); it.hasNext();) {
             drainage.add(it.next().getValue());
             it.remove();
         }
@@ -236,7 +236,7 @@ public class PriorityCacheTest {
     @Test
     public void testPriorities2() {
         System.out.println("Priorities2");
-        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 30, 500, costFunction);
+        NumericPriorityMap<String, EltValue> pc = new BucketedNumericPriorityMap<String, EltValue>(0, 100, 30, 500, costFunction);
         assertTrue(pc.isEmpty());
         assertEquals(0, pc.getCurrentTotalCost(), 0.001);
         pc.put("c30-p50", new EltValue("1", 30), 50);
@@ -256,7 +256,7 @@ public class PriorityCacheTest {
     @Test
     public void testReversePriorities2() {
         System.out.println("ReversePriorities2");
-        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 30, 500, costFunction);
+        NumericPriorityMap<String, EltValue> pc = new BucketedNumericPriorityMap<String, EltValue>(0, 100, 30, 500, costFunction);
         pc.setReverseEviction(true);
         assertTrue(pc.isEmpty());
         assertEquals(0, pc.getCurrentTotalCost(), 0.001);
@@ -277,7 +277,7 @@ public class PriorityCacheTest {
     @Test
     public void testDefaultUnlimitedCost() {
         System.out.println("DefaultUnlimitedCost");
-        PriorityCache<String, EltValue> pc = new BucketedPriorityCache<String, EltValue>(0, 100, 10, -1, null);
+        NumericPriorityMap<String, EltValue> pc = new BucketedNumericPriorityMap<String, EltValue>(0, 100, 10, -1, null);
         assertTrue(pc.isEmpty());
         assertEquals(0, pc.getCurrentTotalCost(), 0.001);
         pc.put("foo", new EltValue("foo", 3000), 0);

@@ -1,6 +1,6 @@
 package de.sofd.util;
 
-import de.sofd.util.PriorityCache.Entry;
+import de.sofd.util.NumericPriorityMap.Entry;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -10,9 +10,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * PriorityCache implementation that provides O(1) time complexity for all
+ * NumericPriorityMap implementation that provides O(1) time complexity for all
  * operations (refer to
- * {@link #BucketedPriorityCache(double, double, int, int, Function1)} to see
+ * {@link #BucketedNumericPriorityMap(double, double, int, int, Function1)} to see
  * what compromises are made to achieve this).
  * <p>
  * Please note that this class is synchronized (TODO: undo that and have a
@@ -23,7 +23,7 @@ import java.util.NoSuchElementException;
  * @param <K>
  * @param <V>
  */
-public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
+public class BucketedNumericPriorityMap<K, V> implements NumericPriorityMap<K, V> {
 
     protected static class EntryImpl<K, V> implements Entry<K,V> {
         K k;
@@ -68,16 +68,16 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
     boolean reverseEviction = false;
 
     /**
-     * Creates a default PriorityCache with a 0..10 sensitive priority range and
+     * Creates a default map with a 0..10 sensitive priority range and
      * 10 buckets. The maximum total cost will be 1000, the element cost
      * function will be one that always returns 1 -- so the cache will grow up
      * to a maximum of 1000 elements.
      */
-    public BucketedPriorityCache() {
+    public BucketedNumericPriorityMap() {
         this(0, 10, 10, 1000, null, false);
     }
 
-    public BucketedPriorityCache(double lowPrio, double highPrio, int nBuckets,
+    public BucketedNumericPriorityMap(double lowPrio, double highPrio, int nBuckets,
             double maxTotalCost, Function1<V, Double> elementCostFunction) {
         this(lowPrio, highPrio, nBuckets, maxTotalCost, elementCostFunction, false);
     }
@@ -100,10 +100,11 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
      * @param nBuckets
      * @param maxTotalCost
      * @param elementCostFunction
+     * @param reverseEviction
      */
     @SuppressWarnings("unchecked")
-    public BucketedPriorityCache(double lowPrio, double highPrio, int nBuckets,
-            double maxTotalCost, Function1<V, Double> elementCostFunction, boolean reverseEvitcion) {
+    public BucketedNumericPriorityMap(double lowPrio, double highPrio, int nBuckets,
+            double maxTotalCost, Function1<V, Double> elementCostFunction, boolean reverseEviction) {
         if (lowPrio >= highPrio || nBuckets <= 0) {
             throw new IllegalArgumentException();
         }
@@ -112,7 +113,7 @@ public class BucketedPriorityCache<K, V> implements PriorityCache<K, V> {
         this.nBuckets = nBuckets;
         this.maxBucketNr = nBuckets - 1;
         this.buckets = new LinkedHashMap[nBuckets];
-        this.reverseEviction = reverseEvitcion;
+        this.reverseEviction = reverseEviction;
         for (int i = 0; i < nBuckets; i++) {
             buckets[i] = new LinkedHashMap<K, EntryImpl<K,V>>(256, 0.75F, false);  //TODO: could access-order really be guaranteed to the outside (b/c internal accesses)?
         }

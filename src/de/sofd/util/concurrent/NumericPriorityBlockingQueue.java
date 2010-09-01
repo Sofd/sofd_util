@@ -1,8 +1,8 @@
 package de.sofd.util.concurrent;
 
 import de.sofd.lang.Function1;
-import de.sofd.util.BucketedPriorityCache;
-import de.sofd.util.PriorityCache;
+import de.sofd.util.BucketedNumericPriorityMap;
+import de.sofd.util.NumericPriorityMap;
 import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.Iterator;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * priority order. This is similar to how {@link PriorityBlockingQueue}
  * orders its elements in ascending {@linkplain Comparable natural ordering},
  * except that this implementation provides O(1) (rather than O(log n)) time
- * complexity for all basic operations by using a {@link BucketedPriorityCache}
+ * complexity for all basic operations by using a {@link BucketedNumericPriorityMap}
  * internally.
  * <p>
  * The priority of each element is determined by a <em>priority function</em>,
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * Additionally, you may supply a <em>cost function</em> that determines a
  * "cost" of each element, and a maximum cost up to which the queue can grow.
  * Please note that when the maximum priority is exceeded, elements with low
- * priorities will be evicted as necessary (see {@link PriorityCache} for
+ * priorities will be evicted as necessary (see {@link NumericPriorityMap} for
  * details). So, what will NOT happen is that methods like <em>put</em> block
  * until other threads have removed enough elements. (something like that may
  * be implemented in the future). For now, only take() will block when the
@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class NumericPriorityBlockingQueue<E> extends AbstractQueue<E> implements BlockingQueue<E> {
 
-    private final PriorityCache<E, E> backend;   //key==value in all elements
+    private final NumericPriorityMap<E, E> backend;   //key==value in all elements
     private final Function1<E, Double> elementPriorityFunction;
     private final Object lock = new Object();
 
@@ -51,14 +51,14 @@ public class NumericPriorityBlockingQueue<E> extends AbstractQueue<E> implements
     }
 
     public NumericPriorityBlockingQueue(double lowPrio, double highPrio, int nBuckets, Function1<E, Double> elementPriorityFunction, double maxTotalCost, Function1<E, Double> elementCostFunction, boolean reverseEviction) {
-        this.backend = new BucketedPriorityCache<E, E>(lowPrio, highPrio, nBuckets, maxTotalCost, elementCostFunction, reverseEviction);
+        this.backend = new BucketedNumericPriorityMap<E, E>(lowPrio, highPrio, nBuckets, maxTotalCost, elementCostFunction, reverseEviction);
         this.elementPriorityFunction = elementPriorityFunction;
     }
 
 
     @Override
     public Iterator<E> iterator() {
-        final Iterator<PriorityCache.Entry<E, E>> ei = backend.entryIterator();
+        final Iterator<NumericPriorityMap.Entry<E, E>> ei = backend.entryIterator();
         return new Iterator<E>() {
 
             @Override
@@ -103,7 +103,7 @@ public class NumericPriorityBlockingQueue<E> extends AbstractQueue<E> implements
     @Override
     public E poll() {
         synchronized (lock) {
-            Iterator<PriorityCache.Entry<E, E>> ei = backend.entryIterator();
+            Iterator<NumericPriorityMap.Entry<E, E>> ei = backend.entryIterator();
             if (!ei.hasNext()) {
                 return null;
             }
@@ -116,7 +116,7 @@ public class NumericPriorityBlockingQueue<E> extends AbstractQueue<E> implements
     @Override
     public E peek() {
         synchronized (lock) {
-            Iterator<PriorityCache.Entry<E, E>> ei = backend.entryIterator();
+            Iterator<NumericPriorityMap.Entry<E, E>> ei = backend.entryIterator();
             if (!ei.hasNext()) {
                 return null;
             }
@@ -175,7 +175,7 @@ public class NumericPriorityBlockingQueue<E> extends AbstractQueue<E> implements
             throw new IllegalArgumentException();
         }
         int n = 0;
-        for (Iterator<PriorityCache.Entry<E,E>> it = backend.entryIterator(); it.hasNext() && n < maxElements;) {
+        for (Iterator<NumericPriorityMap.Entry<E,E>> it = backend.entryIterator(); it.hasNext() && n < maxElements;) {
             c.add(it.next().getValue());
             it.remove();
             ++n;

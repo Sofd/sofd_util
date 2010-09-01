@@ -27,13 +27,16 @@ import java.util.Iterator;
  * <p>
  * There is a boolean isReverseEviction flag -- if it is true, eviction starts
  * with the highest-priority elements, not the lowest-priority ones.
- * 
+ * <p>
+ * TODO: derive this from java.util.Map (submitting priorities via a function
+ * rather than as an additional parameter to put() et.al)
+ *
  * @author olaf
  * 
  * @param <K>
  * @param <V>
  */
-public interface PriorityCache<K, V> {
+public interface NumericPriorityMap<K, V> {
 
     boolean isReverseEviction();
 
