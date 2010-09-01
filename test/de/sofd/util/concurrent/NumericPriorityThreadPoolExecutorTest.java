@@ -32,6 +32,11 @@ public class NumericPriorityThreadPoolExecutorTest {
             writeLogMessage(name+" finished");
         }
 
+        @Override
+        public String toString() {
+            return "Sleeper: " + name + " (" + sleepTime + " ticks)";
+        }
+
     }
 
     public NumericPriorityThreadPoolExecutorTest() {
@@ -105,6 +110,50 @@ public class NumericPriorityThreadPoolExecutorTest {
                 new Message(0,"sleeper12ticks started"),
                 new Message(7,"sleeper7ticks finished"),
                 new Message(12,"sleeper12ticks finished"),
+        });
+    }
+
+    @Test
+    public void testOneThreadWithPriorities() throws Exception {
+        System.out.println("testOneThreadWithPriorities");
+        clearMessageLog();
+        startOrRestartClock();
+        NumericPriorityThreadPoolExecutor e = NumericPriorityThreadPoolExecutor.newFixedThreadPool(1, 10);
+        e.submitWithPriority(new Sleeper("normprio1",3), 5);
+        clockSleep(1);
+        e.submitWithPriority(new Sleeper("normprio2",3), 5);
+        e.submitWithPriority(new Sleeper("normprio3",3), 5);
+        clockSleep(1);
+        e.submitWithPriority(new Sleeper("highprio1",3), 0);
+        e.submitWithPriority(new Sleeper("lowprio1",3), 10);
+        e.submitWithPriority(new Sleeper("highprio2",3), 0);
+        clockSleep(0.5);
+        e.submitWithPriority(new Sleeper("highprio3",3), 0);
+        assertLogMessagesEqual(new Message[]{
+                new Message(0,"normprio1 started"),
+        });
+        clockSleep(2);
+        assertLogMessagesEqual(new Message[]{
+                new Message(0,"normprio1 started"),
+                new Message(3,"normprio1 finished"),
+                new Message(3,"highprio1 started"),
+        });
+        clockSleep(30);
+        assertLogMessagesEqual(new Message[]{
+                new Message(0,"normprio1 started"),
+                new Message(3,"normprio1 finished"),
+                new Message(3,"highprio1 started"),
+                new Message(6,"highprio1 finished"),
+                new Message(6,"highprio2 started"),
+                new Message(9,"highprio2 finished"),
+                new Message(9,"highprio3 started"),
+                new Message(12,"highprio3 finished"),
+                new Message(12,"normprio2 started"),
+                new Message(15,"normprio2 finished"),
+                new Message(15,"normprio3 started"),
+                new Message(18,"normprio3 finished"),
+                new Message(18,"lowprio1 started"),
+                new Message(21,"lowprio1 finished"),
         });
     }
 

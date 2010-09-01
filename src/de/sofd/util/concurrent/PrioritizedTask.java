@@ -30,4 +30,9 @@ public class PrioritizedTask<T> extends FutureTask<T> {
         return priority;
     }
 
+    @Override
+    public String toString() {
+        return "PT: [" + (wrappedRunnable != null ? wrappedRunnable : wrappedCallable) + "] prio=" + getPriority();
+    }
+
 }
