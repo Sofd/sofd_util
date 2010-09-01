@@ -13,6 +13,24 @@ import java.util.concurrent.TimeUnit;
  */
 public class NumericPriorityThreadPoolExecutor extends ThreadPoolExecutor {
 
+    public static NumericPriorityThreadPoolExecutor newFixedThreadPool(int nThreads, double highPrio) {
+        return newFixedThreadPool(nThreads, 0, highPrio, 13);
+    }
+
+    public static NumericPriorityThreadPoolExecutor newFixedThreadPool(int nThreads, double lowPrio, double highPrio, int nBuckets) {
+        return new NumericPriorityThreadPoolExecutor(nThreads, nThreads,
+                                                     0L, TimeUnit.MILLISECONDS,
+                                                     lowPrio, highPrio, nBuckets);
+    }
+
+    public static NumericPriorityThreadPoolExecutor newFixedThreadPool(int nThreads, double lowPrio, double highPrio, int nBuckets, ThreadFactory threadFactory) {
+        return new NumericPriorityThreadPoolExecutor(nThreads, nThreads,
+                                                     0L, TimeUnit.MILLISECONDS,
+                                                     lowPrio, highPrio, nBuckets,
+                                                     threadFactory);
+    }
+
+
     public NumericPriorityThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, double lowPrio, double highPrio, int nBuckets, ThreadFactory threadFactory, RejectedExecutionHandler handler) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, new NumericPriorityBlockingQueue<Runnable>(lowPrio, highPrio, nBuckets, elemPrioFunction, true), threadFactory, handler);
     }

@@ -29,7 +29,7 @@ public class MessageLog {
     }
 
     public void assertMessagesEqual(Message[] messages) {
-        assertEquals(messages, currMessages);
+        assertArrayEquals(messages, currMessages.toArray());
     }
 
     public void clear() {
