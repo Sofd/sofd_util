@@ -46,7 +46,7 @@ public class MessageLog {
         defaultLog.writeMessage(msg);
     }
 
-    public static void assertLogMessagesEqual(Message[] messages) {
+    public static void assertLogMessagesEqual(Message... messages) {
         defaultLog.assertMessagesEqual(messages);
     }
 
