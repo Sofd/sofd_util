@@ -8,7 +8,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
+ * ThreadPoolExecutor variant with a numeric priority value for each task (which
+ * determines the execution order of the tasks) and the ability to change the
+ * priority of a task that has already been queued (but hasn't run yet).
+ * 
  * @author olaf
  */
 public class NumericPriorityThreadPoolExecutor extends ThreadPoolExecutor {
