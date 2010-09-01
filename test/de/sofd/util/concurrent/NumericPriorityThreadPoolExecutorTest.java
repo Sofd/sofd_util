@@ -16,6 +16,10 @@ import static org.junit.Assert.*;
  */
 public class NumericPriorityThreadPoolExecutorTest {
 
+    public static final double MIN_PRIORITY = 10;
+    public static final double NORM_PRIORITY = 5;
+    public static final double MAX_PRIORITY = 0;
+
     private static class Sleeper implements Runnable {
         private final String name;
         private final long sleepTime;
@@ -119,16 +123,16 @@ public class NumericPriorityThreadPoolExecutorTest {
         clearMessageLog();
         startOrRestartClock();
         NumericPriorityThreadPoolExecutor e = NumericPriorityThreadPoolExecutor.newFixedThreadPool(1, 10);
-        e.submitWithPriority(new Sleeper("normprio1",3), 5);
+        e.submitWithPriority(new Sleeper("normprio1",3), NORM_PRIORITY);
         clockSleep(1);
-        e.submitWithPriority(new Sleeper("normprio2",3), 5);
-        e.submitWithPriority(new Sleeper("normprio3",3), 5);
+        e.submitWithPriority(new Sleeper("normprio2",3), NORM_PRIORITY);
+        e.submitWithPriority(new Sleeper("normprio3",3), NORM_PRIORITY);
         clockSleep(1);
-        e.submitWithPriority(new Sleeper("highprio1",3), 0);
-        e.submitWithPriority(new Sleeper("lowprio1",3), 10);
-        e.submitWithPriority(new Sleeper("highprio2",3), 0);
+        e.submitWithPriority(new Sleeper("highprio1",3), MAX_PRIORITY);
+        e.submitWithPriority(new Sleeper("lowprio1",3), MIN_PRIORITY);
+        e.submitWithPriority(new Sleeper("highprio2",3), MAX_PRIORITY);
         clockSleep(0.5);
-        e.submitWithPriority(new Sleeper("highprio3",3), 0);
+        e.submitWithPriority(new Sleeper("highprio3",3), MAX_PRIORITY);
         assertLogMessagesEqual(
                 new Message(0,"normprio1 started")
         );
@@ -163,16 +167,16 @@ public class NumericPriorityThreadPoolExecutorTest {
         clearMessageLog();
         startOrRestartClock();
         NumericPriorityThreadPoolExecutor e = NumericPriorityThreadPoolExecutor.newFixedThreadPool(2, 10);
-        e.submitWithPriority(new Sleeper("normprio1",4), 5);
+        e.submitWithPriority(new Sleeper("normprio1",4), NORM_PRIORITY);
         clockSleep(1);
-        e.submitWithPriority(new Sleeper("normprio2",4), 5);
-        e.submitWithPriority(new Sleeper("normprio3",4), 5);
+        e.submitWithPriority(new Sleeper("normprio2",4), NORM_PRIORITY);
+        e.submitWithPriority(new Sleeper("normprio3",4), NORM_PRIORITY);
         clockSleep(1);
-        e.submitWithPriority(new Sleeper("highprio1",4), 0);
-        e.submitWithPriority(new Sleeper("lowprio1",4), 10);
-        e.submitWithPriority(new Sleeper("highprio2",4), 0);
+        e.submitWithPriority(new Sleeper("highprio1",4), MAX_PRIORITY);
+        e.submitWithPriority(new Sleeper("lowprio1",4), MIN_PRIORITY);
+        e.submitWithPriority(new Sleeper("highprio2",4), MAX_PRIORITY);
         clockSleep(1);
-        e.submitWithPriority(new Sleeper("highprio3",4), 0);
+        e.submitWithPriority(new Sleeper("highprio3",4), MAX_PRIORITY);
         clockSleep(20);
         assertLogMessagesEqual(
                 new Message(0,"normprio1 started"),
@@ -189,6 +193,44 @@ public class NumericPriorityThreadPoolExecutorTest {
                 new Message(12,"lowprio1 started"),
                 new Message(13,"normprio3 finished"),
                 new Message(16,"lowprio1 finished")
+        );
+    }
+
+    @Test
+    public void testOneThreadWithPriorityChangesAndWaiting() throws Exception {
+        System.out.println("testOneThreadWithPriorityChangesAndWaiting");
+        clearMessageLog();
+        startOrRestartClock();
+        NumericPriorityThreadPoolExecutor e = NumericPriorityThreadPoolExecutor.newFixedThreadPool(1, 10);
+        PrioritizedTask<Object> sleeper10second, sleeper10third;
+        e.submitWithPriority(new Sleeper("sleeper4ticks",4), NORM_PRIORITY);
+        sleeper10second = e.submitWithPriority(new Sleeper("sleeper10ticks_2",10), MIN_PRIORITY);
+        sleeper10third = e.submitWithPriority(new Sleeper("sleeper10ticks_3",10), MIN_PRIORITY);
+        e.submitWithPriority(new Sleeper("sleeper4ticks_2",4), NORM_PRIORITY);
+        e.submitWithPriority(new Sleeper("sleeper4ticks_3",4), NORM_PRIORITY);
+        clockSleep(1);
+        e.submitWithPriority(new Sleeper("sleeper10ticks",10), MAX_PRIORITY);
+        clockSleep(1);
+        sleeper10third = e.resubmitWithPriority(sleeper10third, MAX_PRIORITY);
+        sleeper10third.get();
+        clockSleep(1);
+        writeLogMessage("PING");
+        sleeper10second.get();
+        assertCurrentClockTimeIs(42);
+        assertLogMessagesEqual(
+                new Message(0, "sleeper4ticks started"),
+                new Message(4, "sleeper4ticks finished"),
+                new Message(4, "sleeper10ticks started"),
+                new Message(14,"sleeper10ticks finished"),
+                new Message(14,"sleeper10ticks_3 started"),
+                new Message(24,"sleeper10ticks_3 finished"),
+                new Message(24,"sleeper4ticks_2 started"),
+                new Message(25,"PING"),
+                new Message(28,"sleeper4ticks_2 finished"),
+                new Message(28,"sleeper4ticks_3 started"),
+                new Message(32,"sleeper4ticks_3 finished"),
+                new Message(32,"sleeper10ticks_2 started"),
+                new Message(42,"sleeper10ticks_2 finished")
         );
     }
 
