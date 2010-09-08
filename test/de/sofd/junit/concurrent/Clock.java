@@ -77,7 +77,7 @@ public class Clock {
     }
 
 
-    private static Clock defaultClock = new Clock();
+    private static Clock defaultClock = new Clock(500);
 
     public static long getClockTick() {
         return defaultClock.getTick();
